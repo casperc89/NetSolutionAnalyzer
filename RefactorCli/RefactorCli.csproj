@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\RefactorCli.Abstractions\RefactorCli.Abstractions.csproj" />
+    <ProjectReference Include="..\RefactorCli.Infrastructure\RefactorCli.Infrastructure.csproj" />
+    <ProjectReference Include="..\RefactorCli.Analysis.Roslyn\RefactorCli.Analysis.Roslyn.csproj" />
+    <ProjectReference Include="..\RefactorCli.Commands.SystemWebCatalog\RefactorCli.Commands.SystemWebCatalog.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.3" />
+    <PackageReference Include="Spectre.Console" Version="0.54.0" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

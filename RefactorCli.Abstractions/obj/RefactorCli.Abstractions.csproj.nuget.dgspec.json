@@ -1,0 +1,77 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/RefactorCli.Abstractions.csproj": {}
+  },
+  "projects": {
+    "/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/RefactorCli.Abstractions.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/RefactorCli.Abstractions.csproj",
+        "projectName": "RefactorCli.Abstractions",
+        "projectPath": "/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/RefactorCli.Abstractions.csproj",
+        "packagesPath": "/Users/caspercramer/.nuget/packages/",
+        "outputPath": "/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/caspercramer/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/local/share/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[10.0.3, )"
+            },
+            "System.CommandLine": {
+              "target": "Package",
+              "version": "[2.0.0-beta4.22272.1, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.204/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

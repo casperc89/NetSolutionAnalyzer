@@ -1,0 +1,12 @@
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/bin/Debug/net8.0/RefactorCli.Abstractions.deps.json
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/bin/Debug/net8.0/RefactorCli.Abstractions.dll
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/bin/Debug/net8.0/RefactorCli.Abstractions.pdb
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/obj/Debug/net8.0/RefactorCli.Abstractions.csproj.AssemblyReference.cache
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/obj/Debug/net8.0/RefactorCli.Abstractions.GeneratedMSBuildEditorConfig.editorconfig
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/obj/Debug/net8.0/RefactorCli.Abstractions.AssemblyInfoInputs.cache
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/obj/Debug/net8.0/RefactorCli.Abstractions.AssemblyInfo.cs
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/obj/Debug/net8.0/RefactorCli.Abstractions.csproj.CoreCompileInputs.cache
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/obj/Debug/net8.0/RefactorCli.Abstractions.dll
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/obj/Debug/net8.0/refint/RefactorCli.Abstractions.dll
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/obj/Debug/net8.0/RefactorCli.Abstractions.pdb
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/obj/Debug/net8.0/ref/RefactorCli.Abstractions.dll

@@ -1,0 +1,15 @@
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Infrastructure/bin/Debug/net8.0/RefactorCli.Infrastructure.deps.json
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Infrastructure/bin/Debug/net8.0/RefactorCli.Infrastructure.dll
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Infrastructure/bin/Debug/net8.0/RefactorCli.Infrastructure.pdb
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Infrastructure/bin/Debug/net8.0/RefactorCli.Abstractions.dll
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Infrastructure/bin/Debug/net8.0/RefactorCli.Abstractions.pdb
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Infrastructure/obj/Debug/net8.0/RefactorCli.Infrastructure.csproj.AssemblyReference.cache
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Infrastructure/obj/Debug/net8.0/RefactorCli.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Infrastructure/obj/Debug/net8.0/RefactorCli.Infrastructure.AssemblyInfoInputs.cache
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Infrastructure/obj/Debug/net8.0/RefactorCli.Infrastructure.AssemblyInfo.cs
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Infrastructure/obj/Debug/net8.0/RefactorCli.Infrastructure.csproj.CoreCompileInputs.cache
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Infrastructure/obj/Debug/net8.0/Refactor.DD9DFEB8.Up2Date
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Infrastructure/obj/Debug/net8.0/RefactorCli.Infrastructure.dll
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Infrastructure/obj/Debug/net8.0/refint/RefactorCli.Infrastructure.dll
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Infrastructure/obj/Debug/net8.0/RefactorCli.Infrastructure.pdb
+/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Infrastructure/obj/Debug/net8.0/ref/RefactorCli.Infrastructure.dll

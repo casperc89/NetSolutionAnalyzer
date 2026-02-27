@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\RefactorCli.Abstractions\RefactorCli.Abstractions.csproj" />
+    <ProjectReference Include="..\RefactorCli.Analysis.Roslyn\RefactorCli.Analysis.Roslyn.csproj" />
+    <ProjectReference Include="..\RefactorCli.Infrastructure\RefactorCli.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

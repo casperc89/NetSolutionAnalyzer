@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "3DHTuzzIRSqg9LkWgFGz4Yh3vKTUacWaYilRW8Y2wtv4w/JCREC3VeigQYYingQTZwhrph2KbkQLSMhBkyur6w==",
+  "success": true,
+  "projectFilePath": "/Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.Abstractions/RefactorCli.Abstractions.csproj",
+  "expectedPackageFiles": [
+    "/Users/caspercramer/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/10.0.3/microsoft.extensions.dependencyinjection.abstractions.10.0.3.nupkg.sha512",
+    "/Users/caspercramer/.nuget/packages/system.commandline/2.0.0-beta4.22272.1/system.commandline.2.0.0-beta4.22272.1.nupkg.sha512"
+  ],
+  "logs": []
+}
