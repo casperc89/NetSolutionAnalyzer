@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 
-public sealed class MSBuildRoslynSolutionLoader : IRoslynSolutionLoader
+public sealed class MSBuildRoslynSolutionLoader
 {
     private static readonly object RegistrationLock = new();
     private static bool _isRegistered;

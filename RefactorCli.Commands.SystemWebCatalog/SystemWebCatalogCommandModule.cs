@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using RefactorCli.Abstractions;
-using RefactorCli.Abstractions.SystemWebCatalog;
+using RefactorCli.Commands.SystemWebCatalog.Contracts;
 using RefactorCli.Commands.SystemWebCatalog.Reporting;
 using System.CommandLine;
 

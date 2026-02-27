@@ -1,4 +1,4 @@
-namespace RefactorCli.Abstractions.SystemWebCatalog;
+namespace RefactorCli.Commands.SystemWebCatalog.Contracts;
 
 public interface IReportWriter
 {

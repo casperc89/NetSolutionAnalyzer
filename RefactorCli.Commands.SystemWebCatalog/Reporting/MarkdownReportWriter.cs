@@ -1,6 +1,6 @@
 using System.Text;
 using RefactorCli.Abstractions;
-using RefactorCli.Abstractions.SystemWebCatalog;
+using RefactorCli.Commands.SystemWebCatalog.Contracts;
 
 namespace RefactorCli.Commands.SystemWebCatalog.Reporting;
 

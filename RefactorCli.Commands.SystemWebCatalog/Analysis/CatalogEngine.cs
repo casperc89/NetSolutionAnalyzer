@@ -1,16 +1,11 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using RefactorCli.Abstractions;
-using RefactorCli.Abstractions.SystemWebCatalog;
+using RefactorCli.Commands.SystemWebCatalog.Contracts;
 
 namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 
-public interface ICatalogEngine
-{
-    Task<CatalogReport> AnalyzeAsync(Solution solution, string solutionPath, CancellationToken ct);
-}
-
-public sealed class CatalogEngine : ICatalogEngine
+public sealed class CatalogEngine
 {
     private readonly IReadOnlyList<ICatalogAnalyzer> _analyzers;
     private readonly ILogger<CatalogEngine> _logger;

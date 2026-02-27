@@ -1,18 +1,19 @@
 using Microsoft.Extensions.Logging;
 using RefactorCli.Abstractions;
-using RefactorCli.Abstractions.SystemWebCatalog;
+using RefactorCli.Commands.SystemWebCatalog.Analysis;
+using RefactorCli.Commands.SystemWebCatalog.Contracts;
 
 namespace RefactorCli.Commands.SystemWebCatalog;
 
 public sealed class SystemWebCatalogCommandHandler : ICommandHandler<SystemWebCatalogOptions>
 {
-    private readonly ISystemWebCatalogService _catalogService;
+    private readonly SystemWebCatalogService _catalogService;
     private readonly IEnumerable<IReportWriter> _writers;
     private readonly IAppConsole _console;
     private readonly ILogger<SystemWebCatalogCommandHandler> _logger;
 
     public SystemWebCatalogCommandHandler(
-        ISystemWebCatalogService catalogService,
+        SystemWebCatalogService catalogService,
         IEnumerable<IReportWriter> writers,
         IAppConsole console,
         ILogger<SystemWebCatalogCommandHandler> logger)

@@ -1,17 +1,17 @@
 using RefactorCli.Abstractions;
-using RefactorCli.Abstractions.SystemWebCatalog;
+using RefactorCli.Commands.SystemWebCatalog.Contracts;
 
 namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 
-public sealed class SystemWebCatalogService : ISystemWebCatalogService
+public sealed class SystemWebCatalogService
 {
-    private readonly IRoslynSolutionLoader _solutionLoader;
-    private readonly ICatalogEngine _engine;
+    private readonly MSBuildRoslynSolutionLoader _solutionLoader;
+    private readonly CatalogEngine _engine;
     private readonly IFileSystem _fileSystem;
 
     public SystemWebCatalogService(
-        IRoslynSolutionLoader solutionLoader,
-        ICatalogEngine engine,
+        MSBuildRoslynSolutionLoader solutionLoader,
+        CatalogEngine engine,
         IFileSystem fileSystem)
     {
         _solutionLoader = solutionLoader;

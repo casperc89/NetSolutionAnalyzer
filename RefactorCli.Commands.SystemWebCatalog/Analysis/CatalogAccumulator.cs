@@ -1,5 +1,5 @@
 using Microsoft.CodeAnalysis;
-using RefactorCli.Abstractions.SystemWebCatalog;
+using RefactorCli.Commands.SystemWebCatalog.Contracts;
 
 namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 
