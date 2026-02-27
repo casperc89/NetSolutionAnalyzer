@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorCli.Commands.System
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorCli.Tests", "RefactorCli.Tests\RefactorCli.Tests.csproj", "{B7FD1861-BB83-4309-92BF-9E54E59067F1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorCli.SampleLegacyWeb", "RefactorCli.SampleLegacyWeb\RefactorCli.SampleLegacyWeb.csproj", "{E3155D95-DA38-4372-A7DC-4CAC4E4E2894}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +50,9 @@ Global
 		{B7FD1861-BB83-4309-92BF-9E54E59067F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7FD1861-BB83-4309-92BF-9E54E59067F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B7FD1861-BB83-4309-92BF-9E54E59067F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3155D95-DA38-4372-A7DC-4CAC4E4E2894}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3155D95-DA38-4372-A7DC-4CAC4E4E2894}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3155D95-DA38-4372-A7DC-4CAC4E4E2894}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3155D95-DA38-4372-A7DC-4CAC4E4E2894}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

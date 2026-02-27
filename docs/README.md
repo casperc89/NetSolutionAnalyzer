@@ -19,6 +19,37 @@ Its current goal is to generate a repeatable inventory of `System.Web` usage acr
 - `RefactorCli.Analysis.Roslyn`: solution loading, analyzer contracts, catalog engine, analyzers.
 - `RefactorCli.Commands.SystemWebCatalog`: `systemweb catalog` command module + handler.
 - `RefactorCli.Tests`: analyzer and ordering tests.
+- `RefactorCli.SampleLegacyWeb`: sample legacy-style project using a local `System.Web` shim.
+
+## Sample Project
+`RefactorCli.SampleLegacyWeb` is included to exercise catalog rules without referencing the real `System.Web` assembly.
+
+### Why It Exists
+- Provides deterministic analyzer coverage in this repo.
+- Demonstrates legacy patterns commonly seen before ASP.NET Core migration.
+- Lets you validate report output quickly on a known input.
+
+### What It Contains
+- Shim namespace and types: `System.Web.HttpApplication`, `System.Web.HttpContext`, `System.Web.IHttpHandler`, session state, and `HttpContext.Current`.
+- Code usage:
+  - `using System.Web`
+  - base type usage (`HttpApplication`)
+  - handler usage (`IHttpHandler`)
+  - `HttpContext.Current` access
+  - session write/read (`Session["CurrentUserId"]`)
+- Non-code usage:
+  - `web.config` with `system.web`, auth/membership/handlers/modules
+  - `.cshtml` view with `System.Web`/`HttpContext`/`Request.`/`Response.` tokens
+
+### Analyze Only the Sample Solution
+```bash
+dotnet run --project RefactorCli/RefactorCli.csproj -- \
+  systemweb catalog \
+  --solution /Users/caspercramer/Documents/dev/RefactorCli/RefactorCli.sln \
+  --output ./refactor-reports \
+  --format json \
+  --format md
+```
 
 ### Layering Rules
 - Commands should use abstractions and services, not Roslyn APIs directly.
