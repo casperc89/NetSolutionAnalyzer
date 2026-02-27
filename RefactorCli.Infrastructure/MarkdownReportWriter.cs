@@ -5,6 +5,15 @@ namespace RefactorCli.Infrastructure;
 
 public sealed class MarkdownReportWriter : IReportWriter
 {
+    private static readonly IReadOnlyDictionary<string, string> RuleDescriptions = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["SW0001"] = "Using directives that import System.Web namespaces.",
+        ["SW0002"] = "Semantic references to System.Web types and members in code.",
+        ["SW0003"] = "Types that derive from or implement System.Web-based types.",
+        ["SW0004"] = "Configuration elements that indicate classic System.Web behavior.",
+        ["SW0006"] = "Heuristic System.Web usage patterns found in Razor views."
+    };
+
     private readonly IFileSystem _fileSystem;
 
     public MarkdownReportWriter(IFileSystem fileSystem)
@@ -28,9 +37,19 @@ public sealed class MarkdownReportWriter : IReportWriter
         var allFindings = report.Projects.SelectMany(p => p.Findings).ToList();
         var byRule = allFindings
             .GroupBy(f => f.Id)
-            .Select(g => (Rule: g.Key, Count: g.Count()))
+            .Select(g =>
+            {
+                var first = g.First();
+                return (
+                    Rule: g.Key,
+                    Count: g.Count(),
+                    Category: first.Category,
+                    Severity: first.Severity,
+                    Description: GetRuleDescription(g.Key, first.Message));
+            })
             .OrderByDescending(x => x.Count)
-            .ThenBy(x => x.Rule, StringComparer.Ordinal);
+            .ThenBy(x => x.Rule, StringComparer.Ordinal)
+            .ToList();
 
         var hotspots = allFindings
             .GroupBy(f => f.FilePath)
@@ -55,13 +74,23 @@ public sealed class MarkdownReportWriter : IReportWriter
         builder.AppendLine($"- Projects analyzed: {report.Projects.Count}");
         builder.AppendLine($"- Total findings: {allFindings.Count}");
         builder.AppendLine();
-        builder.AppendLine("## Findings by Rule");
+        builder.AppendLine("## Rule Explanations");
         builder.AppendLine();
-        builder.AppendLine("| Rule | Count |");
-        builder.AppendLine("|---|---:|");
+        builder.AppendLine("| Rule | What it detects | Category | Severity | Findings |");
+        builder.AppendLine("|---|---|---|---|---:|");
         foreach (var rule in byRule)
         {
-            builder.AppendLine($"| {rule.Rule} | {rule.Count} |");
+            builder.AppendLine($"| {rule.Rule} | {rule.Description} | {rule.Category} | {rule.Severity} | {rule.Count} |");
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("## Findings by Rule");
+        builder.AppendLine();
+        builder.AppendLine("| Rule | Description | Count |");
+        builder.AppendLine("|---|---|---:|");
+        foreach (var rule in byRule)
+        {
+            builder.AppendLine($"| {rule.Rule} | {rule.Description} | {rule.Count} |");
         }
 
         builder.AppendLine();
@@ -91,5 +120,15 @@ public sealed class MarkdownReportWriter : IReportWriter
         }
 
         return builder.ToString();
+    }
+
+    private static string GetRuleDescription(string ruleId, string message)
+    {
+        if (RuleDescriptions.TryGetValue(ruleId, out var description))
+        {
+            return description;
+        }
+
+        return $"See finding message patterns, for example: {message}";
     }
 }
