@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace RefactorCli.Analysis.Roslyn;
+namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 
 internal static class RoslynSymbolHelpers
 {

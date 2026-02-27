@@ -1,7 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using RefactorCli.Abstractions;
+using RefactorCli.Abstractions.SystemWebCatalog;
 
-namespace RefactorCli.Analysis.Roslyn;
+namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 
 public static class AnalysisServiceCollectionExtensions
 {

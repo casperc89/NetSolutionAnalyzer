@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging.Abstractions;
-using RefactorCli.Analysis.Roslyn;
+using RefactorCli.Commands.SystemWebCatalog.Analysis;
 
 namespace RefactorCli.Tests;
 

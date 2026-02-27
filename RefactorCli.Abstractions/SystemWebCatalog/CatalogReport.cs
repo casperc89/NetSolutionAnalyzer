@@ -1,4 +1,4 @@
-namespace RefactorCli.Abstractions;
+namespace RefactorCli.Abstractions.SystemWebCatalog;
 
 public sealed class CatalogReport
 {

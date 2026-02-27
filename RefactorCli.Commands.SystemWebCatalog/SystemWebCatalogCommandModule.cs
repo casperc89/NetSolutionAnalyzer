@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using RefactorCli.Abstractions;
+using RefactorCli.Abstractions.SystemWebCatalog;
+using RefactorCli.Commands.SystemWebCatalog.Reporting;
 using System.CommandLine;
 
 namespace RefactorCli.Commands.SystemWebCatalog;
@@ -11,6 +13,8 @@ public sealed class SystemWebCatalogCommandModule : ICommandModule
     public void Register(Command root, IServiceCollection services)
     {
         services.AddTransient<ICommandHandler<SystemWebCatalogOptions>, SystemWebCatalogCommandHandler>();
+        services.AddSingleton<IReportWriter, JsonReportWriter>();
+        services.AddSingleton<IReportWriter, MarkdownReportWriter>();
 
         var solutionOption = new Option<string>("--solution", "Path to a .sln file");
         var repoOption = new Option<string?>("--repo", "Path to a repository root (reserved for future use)");

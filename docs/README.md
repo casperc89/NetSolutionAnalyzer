@@ -14,10 +14,9 @@ Its current goal is to generate a repeatable inventory of `System.Web` usage acr
 
 ### Solution Layout
 - `RefactorCli`: executable entrypoint, host bootstrapping, DI wiring.
-- `RefactorCli.Abstractions`: shared contracts, options, report models, exit codes.
-- `RefactorCli.Infrastructure`: filesystem, console abstractions, report writers.
-- `RefactorCli.Analysis.Roslyn`: solution loading, analyzer contracts, catalog engine, analyzers.
-- `RefactorCli.Commands.SystemWebCatalog`: `systemweb catalog` command module + handler.
+- `RefactorCli.Abstractions`: shared generic contracts and exit codes.
+- `RefactorCli.Infrastructure`: filesystem and console abstractions.
+- `RefactorCli.Commands.SystemWebCatalog`: `systemweb catalog` command module + handler, analysis pipeline, and report writers.
 - `RefactorCli.Tests`: analyzer and ordering tests.
 - `RefactorCli.SampleLegacyWeb`: sample legacy-style project using a local `System.Web` shim.
 
@@ -53,7 +52,7 @@ dotnet run --project RefactorCli/RefactorCli.csproj -- \
 
 ### Layering Rules
 - Commands should use abstractions and services, not Roslyn APIs directly.
-- Roslyn-specific logic must stay in `RefactorCli.Analysis.Roslyn`.
+- System.Web-specific Roslyn analysis lives with the `SystemWebCatalog` command.
 - Reporting is format-specific and implemented through `IReportWriter`.
 
 ### Command Model
@@ -135,16 +134,16 @@ Per-finding `Finding`:
 4. Register services in `Program.cs` with `services.AddModule<YourModule>(rootCommand);`.
 
 ### Add a New Analyzer Rule
-1. Create a class implementing `ICatalogAnalyzer` in `RefactorCli.Analysis.Roslyn`.
+1. Create a class implementing `ICatalogAnalyzer` in `RefactorCli.Commands.SystemWebCatalog/Analysis`.
 2. Give it a stable rule ID (`SWxxxx`).
 3. Add findings through `CatalogAccumulator` (dedupe-safe).
 4. Register analyzer in `AnalysisServiceCollectionExtensions`.
 5. Add unit tests in `RefactorCli.Tests`.
 
 ### Add a New Report Format
-1. Implement `IReportWriter` in `RefactorCli.Infrastructure`.
+1. Implement `IReportWriter` in `RefactorCli.Commands.SystemWebCatalog/Reporting`.
 2. Set `Format` to the CLI token (example: `sarif`).
-3. Register writer in `AddInfrastructure`.
+3. Register writer in `SystemWebCatalogCommandModule`.
 4. Include usage docs and test output stability.
 
 ## Testing

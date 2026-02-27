@@ -2,7 +2,7 @@ using System.Xml.Linq;
 using System.Xml;
 using Microsoft.CodeAnalysis;
 
-namespace RefactorCli.Analysis.Roslyn;
+namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 
 public sealed class ConfigSystemWebCatalogAnalyzer : ICatalogAnalyzer
 {

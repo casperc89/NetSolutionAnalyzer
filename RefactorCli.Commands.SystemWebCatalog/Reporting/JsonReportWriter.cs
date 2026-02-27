@@ -1,7 +1,8 @@
 using System.Text.Json;
 using RefactorCli.Abstractions;
+using RefactorCli.Abstractions.SystemWebCatalog;
 
-namespace RefactorCli.Infrastructure;
+namespace RefactorCli.Commands.SystemWebCatalog.Reporting;
 
 public sealed class JsonReportWriter : IReportWriter
 {

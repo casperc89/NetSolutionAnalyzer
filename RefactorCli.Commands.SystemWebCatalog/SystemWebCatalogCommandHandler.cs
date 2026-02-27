@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using RefactorCli.Abstractions;
+using RefactorCli.Abstractions.SystemWebCatalog;
 
 namespace RefactorCli.Commands.SystemWebCatalog;
 

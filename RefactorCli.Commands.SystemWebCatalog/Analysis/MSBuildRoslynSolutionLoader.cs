@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Extensions.Logging;
 
-namespace RefactorCli.Analysis.Roslyn;
+namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 
 public sealed class MSBuildRoslynSolutionLoader : IRoslynSolutionLoader
 {

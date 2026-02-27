@@ -9,8 +9,6 @@ public static class InfrastructureServiceCollectionExtensions
     {
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IAppConsole, AppConsole>();
-        services.AddSingleton<IReportWriter, JsonReportWriter>();
-        services.AddSingleton<IReportWriter, MarkdownReportWriter>();
         return services;
     }
 }

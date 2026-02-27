@@ -1,8 +1,9 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using RefactorCli.Abstractions;
+using RefactorCli.Abstractions.SystemWebCatalog;
 
-namespace RefactorCli.Analysis.Roslyn;
+namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 
 public interface ICatalogEngine
 {

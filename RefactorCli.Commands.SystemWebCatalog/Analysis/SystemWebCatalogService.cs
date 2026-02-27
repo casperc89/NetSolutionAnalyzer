@@ -1,6 +1,7 @@
 using RefactorCli.Abstractions;
+using RefactorCli.Abstractions.SystemWebCatalog;
 
-namespace RefactorCli.Analysis.Roslyn;
+namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 
 public sealed class SystemWebCatalogService : ISystemWebCatalogService
 {
