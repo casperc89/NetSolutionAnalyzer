@@ -3,6 +3,7 @@ using RefactorCli.Abstractions;
 using RefactorCli.Commands.SystemWebCatalog.Contracts;
 using RefactorCli.Commands.SystemWebCatalog.Reporting;
 using System.CommandLine;
+using RefactorCli.Commands.SystemWebCatalog.Analysis;
 
 namespace RefactorCli.Commands.SystemWebCatalog;
 
@@ -15,6 +16,8 @@ public sealed class SystemWebCatalogCommandModule : ICommandModule
         services.AddTransient<ICommandHandler<SystemWebCatalogOptions>, SystemWebCatalogCommandHandler>();
         services.AddSingleton<IReportWriter, JsonReportWriter>();
         services.AddSingleton<IReportWriter, MarkdownReportWriter>();
+        
+        services.AddRoslynAnalysis();
 
         var solutionOption = new Option<string>("--solution", "Path to a .sln file");
         var repoOption = new Option<string?>("--repo", "Path to a repository root (reserved for future use)");

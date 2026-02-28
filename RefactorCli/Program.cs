@@ -2,7 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RefactorCli.Abstractions;
-using RefactorCli.Commands.SystemWebCatalog.Analysis;
 using RefactorCli.Commands.SystemWebCatalog;
 using RefactorCli.Infrastructure;
 using System.CommandLine;
@@ -18,7 +17,7 @@ using var host = Host.CreateDefaultBuilder(args)
         services.AddLogging(builder => builder.AddConsole());
 
         services.AddInfrastructure();
-        services.AddRoslynAnalysis();
+        
         services.AddModule<SystemWebCatalogCommandModule>(rootCommand);
     })
     .Build();
