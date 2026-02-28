@@ -19,6 +19,9 @@ public static class AnalysisServiceCollectionExtensions
         services.AddSingleton<ICatalogAnalyzer, HttpContextCurrentCatalogAnalyzer>();
         services.AddSingleton<ICatalogAnalyzer, HttpApplicationLifecycleCatalogAnalyzer>();
         services.AddSingleton<ICatalogAnalyzer, ServerMapPathCatalogAnalyzer>();
+        services.AddSingleton<ICatalogAnalyzer, SessionUsageCatalogAnalyzer>();
+        services.AddSingleton<ICatalogAnalyzer, PostedFileCatalogAnalyzer>();
+        services.AddSingleton<ICatalogAnalyzer, HeadersCookiesCatalogAnalyzer>();
 
         return services;
     }

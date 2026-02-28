@@ -171,6 +171,196 @@ public class SystemWebAnalyzersTests
     }
 
     [Fact]
+    public async Task SW0400_Finds_Session_Across_Common_Shapes()
+    {
+        var project = CreateProject("""
+            namespace System.Web.SessionState
+            {
+                public class SessionStateItemCollection {}
+            }
+
+            namespace System.Web
+            {
+                public class HttpSessionState
+                {
+                    public object this[string key]
+                    {
+                        get => key;
+                        set {}
+                    }
+                }
+
+                public class HttpContext
+                {
+                    public static HttpContext Current => new();
+                    public HttpSessionState Session => new();
+                }
+            }
+
+            namespace System.Web.Mvc
+            {
+                public abstract class Controller
+                {
+                    public System.Web.HttpSessionState Session => new();
+                }
+            }
+
+            namespace Demo
+            {
+                public static class SessionExtensions
+                {
+                    public static string? GetString(this System.Web.HttpSessionState session, string key) => null;
+                }
+
+                public sealed class C : System.Web.Mvc.Controller
+                {
+                    public void M()
+                    {
+                        Session["K"] = "V";
+                        _ = Session.GetString("K");
+                        _ = System.Web.HttpContext.Current.Session;
+                        System.Web.SessionState.SessionStateItemCollection? items = null;
+                    }
+                }
+            }
+            """);
+
+        var analyzer = new SessionUsageCatalogAnalyzer();
+        var acc = new CatalogAccumulator();
+        await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
+
+        Assert.Contains(acc.Findings, f => f.Id == "SW0400" && f.Symbol == "System.Web.Mvc.Controller.Session");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0400" && f.Symbol == "SessionStateItemCollection.this[]");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0400" && f.Symbol == "System.Web.HttpContext.Current.Session");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0400" && f.Symbol is not null && f.Symbol.Contains(".GetString(...)", StringComparison.Ordinal));
+        Assert.Contains(acc.Findings, f => f.Id == "SW0400" && f.Symbol == "System.Web.SessionState.SessionStateItemCollection");
+    }
+
+    [Fact]
+    public async Task SW0500_Finds_HttpPostedFileBase_RequestFiles_And_InputStream()
+    {
+        var project = CreateProject("""
+            namespace System.Web
+            {
+                public class HttpPostedFileBase
+                {
+                    public System.IO.Stream InputStream => System.IO.Stream.Null;
+                }
+
+                public class HttpFileCollectionBase {}
+
+                public class HttpRequest
+                {
+                    public HttpFileCollectionBase Files => new();
+                }
+            }
+
+            namespace Demo
+            {
+                public sealed class C
+                {
+                    public void M(System.Web.HttpPostedFileBase file, System.Web.HttpRequest request)
+                    {
+                        _ = file.InputStream;
+                        _ = request.Files;
+                    }
+                }
+            }
+            """);
+
+        var analyzer = new PostedFileCatalogAnalyzer();
+        var acc = new CatalogAccumulator();
+        await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
+
+        Assert.Contains(acc.Findings, f => f.Id == "SW0500" && f.Symbol == "System.Web.HttpPostedFileBase");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0500" && f.Symbol == "System.Web.HttpPostedFileBase.InputStream");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0500" && f.Symbol == "System.Web.HttpRequest.Files");
+    }
+
+    [Fact]
+    public async Task SW0702_Finds_RequestResponseCookies_And_HttpCookie()
+    {
+        var project = CreateProject("""
+            namespace System.Web
+            {
+                public class HttpCookie
+                {
+                    public HttpCookie(string name, string value) {}
+                }
+
+                public class HttpCookieCollection
+                {
+                    public HttpCookie this[string name]
+                    {
+                        get => new(name, "v");
+                    }
+                }
+
+                public class HttpRequest
+                {
+                    public HttpCookieCollection Cookies => new();
+                }
+
+                public class HttpResponse
+                {
+                    public HttpCookieCollection Cookies => new();
+                }
+            }
+
+            namespace Demo
+            {
+                public sealed class C
+                {
+                    public void M(System.Web.HttpRequest req, System.Web.HttpResponse res)
+                    {
+                        _ = req.Cookies["Auth"];
+                        _ = res.Cookies["Auth"];
+                        var c = new System.Web.HttpCookie("Theme", "Dark");
+                    }
+                }
+            }
+            """);
+
+        var analyzer = new HeadersCookiesCatalogAnalyzer();
+        var acc = new CatalogAccumulator();
+        await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
+
+        Assert.Contains(acc.Findings, f => f.Id == "SW0702" && f.Symbol == "System.Web.HttpRequest.Cookies");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0702" && f.Symbol == "System.Web.HttpResponse.Cookies");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0702" && f.Symbol == "System.Web.HttpCookie");
+    }
+
+    [Fact]
+    public async Task SW0702_DoesNotFlag_NonSystemWeb_Cookies()
+    {
+        var project = CreateProject("""
+            namespace Demo;
+
+            public class HttpCookie {}
+
+            public class HttpRequest
+            {
+                public string Cookies => "local";
+            }
+
+            public class C
+            {
+                public void M(HttpRequest req)
+                {
+                    _ = req.Cookies;
+                    _ = new HttpCookie();
+                }
+            }
+            """);
+
+        var analyzer = new HeadersCookiesCatalogAnalyzer();
+        var acc = new CatalogAccumulator();
+        await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
+
+        Assert.DoesNotContain(acc.Findings, f => f.Id == "SW0702");
+    }
+
+    [Fact]
     public async Task CatalogEngine_Produces_Stable_Finding_Order()
     {
         var workspace = new AdhocWorkspace();
