@@ -61,13 +61,6 @@ public sealed class MarkdownReportWriter : IReportWriter
             .ThenBy(x => x.Rule, StringComparer.Ordinal)
             .ToList();
 
-        var hotspots = allFindings
-            .GroupBy(f => f.FilePath)
-            .Select(g => (File: g.Key, Count: g.Count()))
-            .OrderByDescending(x => x.Count)
-            .ThenBy(x => x.File, StringComparer.Ordinal)
-            .Take(15);
-
         var symbols = allFindings
             .Where(f => !string.IsNullOrWhiteSpace(f.Symbol))
             .GroupBy(f => f.Symbol!)
@@ -155,13 +148,78 @@ public sealed class MarkdownReportWriter : IReportWriter
         }
 
         builder.AppendLine();
-        builder.AppendLine("## File Hotspots");
+        builder.AppendLine("## File Hotspots by Project");
         builder.AppendLine();
-        foreach (var hotspot in hotspots)
+        var projectsWithHotspots = orderedProjects
+            .Where(p => p.Findings.Count > 0)
+            .ToList();
+
+        foreach (var project in projectsWithHotspots)
         {
-            builder.AppendLine($"- `{hotspot.File}` ({hotspot.Count})");
+            builder.AppendLine($"### {project.ProjectName}");
+            builder.AppendLine();
+
+            var fileHotspots = project.Findings
+                .GroupBy(f => f.FilePath)
+                .Select(g =>
+                {
+                    var ruleBreakdown = g
+                        .GroupBy(f => f.Id)
+                        .Select(rg => (Rule: rg.Key, Count: rg.Count()))
+                        .OrderByDescending(x => x.Count)
+                        .ThenBy(x => x.Rule, StringComparer.Ordinal)
+                        .Select(x => $"{x.Rule} ({x.Count})");
+
+                    var topSymbols = g
+                        .Where(f => !string.IsNullOrWhiteSpace(f.Symbol))
+                        .GroupBy(f => f.Symbol!)
+                        .Select(sg => (Symbol: sg.Key, Count: sg.Count()))
+                        .OrderByDescending(x => x.Count)
+                        .ThenBy(x => x.Symbol, StringComparer.Ordinal)
+                        .Take(3)
+                        .Select(x => $"{x.Symbol} ({x.Count})");
+
+                    return (
+                        File: g.Key,
+                        Total: g.Count(),
+                        RuleBreakdown: string.Join(", ", ruleBreakdown),
+                        TopSymbols: string.Join(", ", topSymbols));
+                })
+                .OrderByDescending(x => x.Total)
+                .ThenBy(x => x.File, StringComparer.Ordinal)
+                .Take(15)
+                .ToList();
+
+            builder.AppendLine("| File | Total | Rule Breakdown | Top Symbols |");
+            builder.AppendLine("|---|---:|---|---|");
+            if (fileHotspots.Count == 0)
+            {
+                builder.AppendLine("| _None_ | 0 | - | - |");
+            }
+            else
+            {
+                foreach (var hotspot in fileHotspots)
+                {
+                    var ruleBreakdown = string.IsNullOrWhiteSpace(hotspot.RuleBreakdown) ? "-" : hotspot.RuleBreakdown;
+                    var topSymbolsText = string.IsNullOrWhiteSpace(hotspot.TopSymbols) ? "-" : hotspot.TopSymbols;
+                    builder.AppendLine($"| `{hotspot.File}` | {hotspot.Total} | {EscapeMarkdownTableCell(ruleBreakdown)} | {EscapeMarkdownTableCell(topSymbolsText)} |");
+                }
+            }
+
+            builder.AppendLine();
+        }
+
+        if (projectsWithHotspots.Count == 0)
+        {
+            builder.AppendLine("_No project hotspots found._");
+            builder.AppendLine();
         }
 
         return builder.ToString();
+    }
+
+    private static string EscapeMarkdownTableCell(string value)
+    {
+        return value.Replace("|", "\\|", StringComparison.Ordinal);
     }
 }
