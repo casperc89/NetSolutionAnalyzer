@@ -8,6 +8,8 @@ public sealed class SystemWebCatalogOptions
 
     public required IReadOnlyList<string> Formats { get; init; }
 
+    public IReadOnlyList<string> IncludedRules { get; init; } = [];
+
     public VerbosityLevel Verbosity { get; init; } = VerbosityLevel.Normal;
 }
 

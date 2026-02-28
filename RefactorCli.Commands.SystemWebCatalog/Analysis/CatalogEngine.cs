@@ -17,8 +17,47 @@ public sealed class CatalogEngine
         _logger = logger;
     }
 
-    public async Task<CatalogReport> AnalyzeAsync(Solution solution, string solutionPath, CancellationToken ct)
+    public async Task<CatalogReport> AnalyzeAsync(
+        Solution solution,
+        string solutionPath,
+        IReadOnlyList<string> includedRules,
+        CancellationToken ct)
     {
+        var selectedRules = includedRules
+            .Where(rule => !string.IsNullOrWhiteSpace(rule))
+            .Select(rule => rule.Trim().ToUpperInvariant())
+            .Distinct(StringComparer.Ordinal)
+            .ToHashSet(StringComparer.Ordinal);
+
+        IReadOnlyList<ICatalogAnalyzer> activeAnalyzers;
+        if (selectedRules.Count == 0)
+        {
+            activeAnalyzers = _analyzers;
+        }
+        else
+        {
+            var analyzerIds = _analyzers
+                .Select(a => a.Descriptor.Id)
+                .ToHashSet(StringComparer.Ordinal);
+
+            var unknownRules = selectedRules
+                .Where(rule => !analyzerIds.Contains(rule))
+                .OrderBy(rule => rule, StringComparer.Ordinal)
+                .ToList();
+
+            if (unknownRules.Count > 0)
+            {
+                var availableRules = string.Join(", ", analyzerIds.OrderBy(rule => rule, StringComparer.Ordinal));
+                throw new InvalidCommandOptionsException(
+                    $"Unknown rule ID(s): {string.Join(", ", unknownRules)}. Available rule IDs: {availableRules}.");
+            }
+
+            activeAnalyzers = _analyzers
+                .Where(analyzer => selectedRules.Contains(analyzer.Descriptor.Id))
+                .OrderBy(analyzer => analyzer.Descriptor.Id, StringComparer.Ordinal)
+                .ToList();
+        }
+
         var projectReports = new List<ProjectReport>();
 
         foreach (var project in solution.Projects.OrderBy(p => p.Name, StringComparer.Ordinal))
@@ -28,7 +67,7 @@ public sealed class CatalogEngine
 
             var acc = new CatalogAccumulator();
 
-            foreach (var analyzer in _analyzers)
+            foreach (var analyzer in activeAnalyzers)
             {
                 try
                 {
@@ -64,7 +103,7 @@ public sealed class CatalogEngine
         {
             GeneratedAtUtc = DateTime.UtcNow,
             SolutionPath = solutionPath,
-            Rules = _analyzers
+            Rules = activeAnalyzers
                 .Select(a => a.Descriptor)
                 .OrderBy(r => r.Id, StringComparer.Ordinal)
                 .ToList(),

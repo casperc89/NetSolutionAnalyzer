@@ -27,6 +27,11 @@ public sealed class SystemWebCatalogCommandModule : ICommandModule
             () => ["json", "md"],
             "Output formats: json|md|sarif");
         formatOption.AllowMultipleArgumentsPerToken = true;
+        var includeRuleOption = new Option<string[]>(
+            aliases: ["--include-rule", "--include-rules"],
+            getDefaultValue: () => [],
+            description: "Only run the specified rule IDs (for example: SW0001, SW0003).");
+        includeRuleOption.AllowMultipleArgumentsPerToken = true;
 
         var verbosityOption = new Option<string>("--verbosity", () => "normal", "quiet|normal|diag");
 
@@ -38,8 +43,10 @@ public sealed class SystemWebCatalogCommandModule : ICommandModule
 
         var systemweb = new Command("systemweb", "System.Web migration catalog commands");
         var catalog = new Command("catalog", "Catalog System.Web usage");
+        
+        catalog.AddOption(includeRuleOption);
 
-        catalog.SetHandler(async (string? solution, string output, string[] format, string verbosity) =>
+        catalog.SetHandler(async (string? solution, string output, string[] format, string[] includeRules, string verbosity) =>
         {
             if (string.IsNullOrWhiteSpace(solution))
             {
@@ -52,11 +59,19 @@ public sealed class SystemWebCatalogCommandModule : ICommandModule
                 ?? throw new InvalidOperationException("Service provider not initialized");
 
             var handler = serviceProvider.GetRequiredService<ICommandHandler<SystemWebCatalogOptions>>();
+            var normalizedIncludedRules = includeRules
+                .SelectMany(value => value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value.Trim().ToUpperInvariant())
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
+
             var options = new SystemWebCatalogOptions
             {
                 SolutionPath = solution,
                 OutputPath = output,
                 Formats = format,
+                IncludedRules = normalizedIncludedRules,
                 Verbosity = verbosity.ToLowerInvariant() switch
                 {
                     "quiet" => VerbosityLevel.Quiet,
@@ -67,7 +82,7 @@ public sealed class SystemWebCatalogCommandModule : ICommandModule
 
             var exitCode = await handler.ExecuteAsync(options, CancellationToken.None);
             Environment.ExitCode = exitCode;
-        }, solutionOption, outputOption, formatOption, verbosityOption);
+        }, solutionOption, outputOption, formatOption, includeRuleOption, verbosityOption);
 
         systemweb.AddCommand(catalog);
         root.AddCommand(systemweb);

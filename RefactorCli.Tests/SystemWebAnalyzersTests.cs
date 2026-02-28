@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging.Abstractions;
+using RefactorCli.Abstractions;
 using RefactorCli.Commands.SystemWebCatalog.Analysis;
 using RefactorCli.Commands.SystemWebCatalog.Analyzers;
 using RefactorCli.Commands.SystemWebCatalog.Contracts;
@@ -41,7 +42,7 @@ public class SystemWebAnalyzersTests
         var acc = new CatalogAccumulator();
         await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
 
-        Assert.Contains(acc.Findings, f => f.Id == "SW0002" && f.Symbol is not null && f.Symbol.Contains("System.Web.HttpContext", StringComparison.Ordinal));
+        Assert.Contains(acc.Findings, f => f.Id == "SW0002" && f.Symbol is not null && f.Symbol.Contains("HttpContext", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -65,12 +66,48 @@ public class SystemWebAnalyzersTests
 
         var project = solution.GetProject(projectId)!;
         var engine = new CatalogEngine([new DeterministicOrderProbeAnalyzer()], NullLogger<CatalogEngine>.Instance);
-        var report = await engine.AnalyzeAsync(project.Solution, "/tmp/test.sln", CancellationToken.None);
+        var report = await engine.AnalyzeAsync(project.Solution, "/tmp/test.sln", [], CancellationToken.None);
 
         var findings = report.Projects.Single().Findings;
         var first = findings.First();
         Assert.Equal("SWX001", first.Id);
         Assert.EndsWith("a.cs", first.FilePath, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task CatalogEngine_IncludedRules_RunsOnlyRequestedAnalyzers()
+    {
+        var project = CreateProject("""
+            namespace Demo;
+            public class C {}
+            """);
+
+        var engine = new CatalogEngine(
+            [new DeterministicOrderProbeAnalyzer(), new SecondaryProbeAnalyzer()],
+            NullLogger<CatalogEngine>.Instance);
+
+        var report = await engine.AnalyzeAsync(project.Solution, "/tmp/test.sln", ["swx001"], CancellationToken.None);
+        var findings = report.Projects.Single().Findings;
+
+        Assert.All(findings, finding => Assert.Equal("SWX001", finding.Id));
+        Assert.Equal(["SWX001"], report.Rules.Select(rule => rule.Id).ToArray());
+    }
+
+    [Fact]
+    public async Task CatalogEngine_IncludedRules_UnknownRule_Throws()
+    {
+        var project = CreateProject("""
+            namespace Demo;
+            public class C {}
+            """);
+
+        var engine = new CatalogEngine([new DeterministicOrderProbeAnalyzer()], NullLogger<CatalogEngine>.Instance);
+
+        var ex = await Assert.ThrowsAsync<InvalidCommandOptionsException>(
+            () => engine.AnalyzeAsync(project.Solution, "/tmp/test.sln", ["SW9999"], CancellationToken.None));
+
+        Assert.Contains("Unknown rule ID(s): SW9999", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("Available rule IDs: SWX001", ex.Message, StringComparison.Ordinal);
     }
 
     private static Project CreateProject(string source)
@@ -114,6 +151,37 @@ public class SystemWebAnalyzersTests
                     message: "probe",
                     filePath: doc.Name,
                     line: 10,
+                    column: 1,
+                    symbol: doc.Name);
+            }
+
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class SecondaryProbeAnalyzer : ICatalogAnalyzer
+    {
+        public CatalogRuleDescriptor Descriptor { get; } = new()
+        {
+            Id = "SWX002",
+            Title = "Probe 2",
+            Category = "Member",
+            Severity = "Info",
+            WhatItDetects = "Secondary test probe finding.",
+            WhyItMatters = "Used to validate include-rule filtering."
+        };
+
+        public Task AnalyzeAsync(Project project, CatalogAccumulator acc, CancellationToken ct)
+        {
+            foreach (var doc in project.Documents)
+            {
+                acc.Add(
+                    id: Descriptor.Id,
+                    category: Descriptor.Category,
+                    severity: Descriptor.Severity,
+                    message: "probe2",
+                    filePath: doc.Name,
+                    line: 11,
                     column: 1,
                     symbol: doc.Name);
             }

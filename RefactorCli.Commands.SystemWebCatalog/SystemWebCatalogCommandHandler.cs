@@ -29,6 +29,11 @@ public sealed class SystemWebCatalogCommandHandler : ICommandHandler<SystemWebCa
         try
         {
             _console.Info($"Loading solution: {options.SolutionPath}");
+            if (options.IncludedRules.Count > 0)
+            {
+                _console.Info($"Including rules: {string.Join(", ", options.IncludedRules.OrderBy(rule => rule, StringComparer.Ordinal))}");
+            }
+
             var report = await _catalogService.AnalyzeAsync(options, ct);
 
             var selectedFormats = options.Formats

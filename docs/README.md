@@ -42,7 +42,7 @@ Current focus: generate a repeatable inventory of `System.Web` usage across a so
 1. CLI parses `systemweb catalog` options.
 2. `SystemWebCatalogCommandHandler` validates and invokes `SystemWebCatalogService`.
 3. `SystemWebCatalogService` resolves/validates solution path and loads the solution via `MSBuildRoslynSolutionLoader`.
-4. `CatalogEngine` runs all registered `ICatalogAnalyzer` instances per project.
+4. `CatalogEngine` runs all registered `ICatalogAnalyzer` instances per project, or only selected rule IDs when `--include-rule/--include-rules` is provided.
 5. Findings are deduped and ordered deterministically.
 6. `CatalogReport` is produced with project findings and rule descriptors.
 7. Selected report writers (`json`, `md`) write files to output directory.
@@ -70,6 +70,7 @@ dotnet run --project RefactorCli/RefactorCli.csproj -- \
 - `--repo <path>`: reserved for future repo-first flows.
 - `--output <path>`: report output directory.
 - `--format json|md|sarif`: output formats (`json` and `md` currently implemented).
+- `--include-rule <id>` / `--include-rules <id1,id2>`: include only the specified rule IDs.
 - `--verbosity quiet|normal|diag`: command verbosity.
 
 ### Exit Codes
