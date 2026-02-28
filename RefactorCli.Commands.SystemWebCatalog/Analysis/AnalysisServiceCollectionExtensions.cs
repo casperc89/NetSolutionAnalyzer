@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using RefactorCli.Commands.SystemWebCatalog.Analyzers;
 
 namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 

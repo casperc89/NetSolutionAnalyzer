@@ -1,7 +1,8 @@
 using Microsoft.CodeAnalysis;
 using RefactorCli.Commands.SystemWebCatalog.Contracts;
+using RefactorCli.Commands.SystemWebCatalog.Analysis;
 
-namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
+namespace RefactorCli.Commands.SystemWebCatalog.Analyzers;
 
 public sealed class ViewSystemWebCatalogAnalyzer : ICatalogAnalyzer
 {

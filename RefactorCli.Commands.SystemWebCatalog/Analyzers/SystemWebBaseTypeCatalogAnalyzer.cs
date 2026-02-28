@@ -1,8 +1,9 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using RefactorCli.Commands.SystemWebCatalog.Contracts;
+using RefactorCli.Commands.SystemWebCatalog.Analysis;
 
-namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
+namespace RefactorCli.Commands.SystemWebCatalog.Analyzers;
 
 public sealed class SystemWebBaseTypeCatalogAnalyzer : ICatalogAnalyzer
 {

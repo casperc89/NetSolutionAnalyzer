@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging.Abstractions;
 using RefactorCli.Commands.SystemWebCatalog.Analysis;
+using RefactorCli.Commands.SystemWebCatalog.Analyzers;
 using RefactorCli.Commands.SystemWebCatalog.Contracts;
 
 namespace RefactorCli.Tests;

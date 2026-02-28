@@ -1,20 +1,20 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using RefactorCli.Commands.SystemWebCatalog.Contracts;
+using RefactorCli.Commands.SystemWebCatalog.Analysis;
 
-namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
+namespace RefactorCli.Commands.SystemWebCatalog.Analyzers;
 
 public sealed class SemanticSystemWebSymbolCatalogAnalyzer : ICatalogAnalyzer
 {
     private static readonly Type[] CandidateNodeTypes =
     [
-        typeof(IdentifierNameSyntax),
         typeof(QualifiedNameSyntax),
         typeof(MemberAccessExpressionSyntax),
         typeof(ObjectCreationExpressionSyntax),
         typeof(InvocationExpressionSyntax),
         typeof(AttributeSyntax),
-        typeof(BaseListSyntax)
+        typeof(BaseTypeSyntax)
     ];
 
     private static readonly CatalogRuleDescriptor Rule = new()
@@ -57,12 +57,22 @@ public sealed class SemanticSystemWebSymbolCatalogAnalyzer : ICatalogAnalyzer
                 var symbolInfo = semanticModel.GetSymbolInfo(node, ct);
                 symbol = symbolInfo.Symbol ?? symbolInfo.CandidateSymbols.FirstOrDefault();
 
+                if (symbol is IAliasSymbol alias)
+                {
+                    symbol = alias.Target;
+                }
+
                 if (symbol is null && node is ExpressionSyntax expression)
                 {
                     symbol = semanticModel.GetTypeInfo(expression, ct).Type;
                 }
 
                 if (!RoslynSymbolHelpers.IsSystemWebSymbol(symbol))
+                {
+                    continue;
+                }
+
+                if (RoslynSymbolHelpers.IsNoiseSymbolKind(symbol))
                 {
                     continue;
                 }

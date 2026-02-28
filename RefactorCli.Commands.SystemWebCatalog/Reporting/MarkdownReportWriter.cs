@@ -108,9 +108,42 @@ public sealed class MarkdownReportWriter : IReportWriter
         builder.AppendLine();
         builder.AppendLine("| Project | Findings | Documents Analyzed |");
         builder.AppendLine("|---|---:|---:|");
-        foreach (var project in report.Projects.OrderBy(p => p.ProjectName, StringComparer.Ordinal))
+        var orderedProjects = report.Projects.OrderBy(p => p.ProjectName, StringComparer.Ordinal).ToList();
+        foreach (var project in orderedProjects)
         {
             builder.AppendLine($"| {project.ProjectName} | {project.Findings.Count} | {project.DocumentsAnalyzed} |");
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("### Findings by Rule per Project");
+        builder.AppendLine();
+        foreach (var project in orderedProjects)
+        {
+            builder.AppendLine($"#### {project.ProjectName}");
+            builder.AppendLine();
+
+            var projectFindingsByRule = project.Findings
+                .GroupBy(f => f.Id)
+                .Select(g => (Rule: g.Key, Count: g.Count()))
+                .OrderByDescending(x => x.Count)
+                .ThenBy(x => x.Rule, StringComparer.Ordinal)
+                .ToList();
+
+            builder.AppendLine("| Rule | Count |");
+            builder.AppendLine("|---|---:|");
+            if (projectFindingsByRule.Count == 0)
+            {
+                builder.AppendLine("| _None_ | 0 |");
+            }
+            else
+            {
+                foreach (var findingByRule in projectFindingsByRule)
+                {
+                    builder.AppendLine($"| {findingByRule.Rule} | {findingByRule.Count} |");
+                }
+            }
+
+            builder.AppendLine();
         }
 
         builder.AppendLine();
