@@ -46,6 +46,131 @@ public class SystemWebAnalyzersTests
     }
 
     [Fact]
+    public async Task SW0101_Finds_HttpApplication_And_Lifecycle_Handler_Methods()
+    {
+        var project = CreateProject("""
+            namespace System.Web
+            {
+                public class HttpApplication {}
+            }
+
+            namespace Demo;
+
+            public sealed class Global : System.Web.HttpApplication
+            {
+                protected void Application_BeginRequest() {}
+            }
+            """);
+
+        var analyzer = new HttpApplicationLifecycleCatalogAnalyzer();
+        var acc = new CatalogAccumulator();
+        await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
+
+        Assert.Contains(acc.Findings, f => f.Id == "SW0101" && f.Symbol == "System.Web.HttpApplication");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0101" && f.Symbol == "Application_BeginRequest");
+    }
+
+    [Fact]
+    public async Task SW0100_Finds_HttpContextCurrent_And_Ambient_Chain_Members()
+    {
+        var project = CreateProject("""
+            namespace System.Web
+            {
+                public class HttpRequest {}
+                public class HttpServerUtility {}
+                public class HttpContext
+                {
+                    public static HttpContext Current => new();
+                    public HttpRequest Request => new();
+                    public HttpServerUtility Server => new();
+                }
+            }
+
+            namespace Demo;
+
+            public class C
+            {
+                public void M()
+                {
+                    _ = System.Web.HttpContext.Current;
+                    _ = System.Web.HttpContext.Current.Request;
+                    _ = System.Web.HttpContext.Current.Server;
+                }
+            }
+            """);
+
+        var analyzer = new HttpContextCurrentCatalogAnalyzer();
+        var acc = new CatalogAccumulator();
+        await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
+
+        Assert.Contains(acc.Findings, f => f.Id == "SW0100" && f.Symbol == "System.Web.HttpContext.Current");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0100" && f.Symbol == "System.Web.HttpContext.Current.Request");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0100" && f.Symbol == "System.Web.HttpContext.Current.Server");
+    }
+
+    [Fact]
+    public async Task SW0100_DoesNotFlag_NonSystemWeb_HttpContext()
+    {
+        var project = CreateProject("""
+            namespace Demo;
+
+            public class HttpContext
+            {
+                public static HttpContext Current => new();
+                public string Request => "/";
+            }
+
+            public class C
+            {
+                public void M()
+                {
+                    _ = HttpContext.Current.Request;
+                }
+            }
+            """);
+
+        var analyzer = new HttpContextCurrentCatalogAnalyzer();
+        var acc = new CatalogAccumulator();
+        await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
+
+        Assert.DoesNotContain(acc.Findings, f => f.Id == "SW0100");
+    }
+
+    [Fact]
+    public async Task SW0104_Finds_ServerMapPath_And_HttpContextCurrentServer()
+    {
+        var project = CreateProject("""
+            namespace System.Web
+            {
+                public class HttpServerUtility
+                {
+                    public string MapPath(string path) => path;
+                }
+
+                public class HttpContext
+                {
+                    public static HttpContext Current => new();
+                    public HttpServerUtility Server => new();
+                }
+            }
+
+            namespace Demo;
+
+            public class C
+            {
+                public string Resolve() => System.Web.HttpContext.Current.Server.MapPath("~/content");
+            }
+            """);
+
+        var analyzer = new ServerMapPathCatalogAnalyzer();
+        var acc = new CatalogAccumulator();
+        await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
+
+        Assert.Contains(acc.Findings, f => f.Id == "SW0104" && f.Symbol == "System.Web.HttpContext.Server");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0104" && f.Symbol == "System.Web.HttpServerUtility.MapPath");
+    }
+
+    [Fact]
     public async Task CatalogEngine_Produces_Stable_Finding_Order()
     {
         var workspace = new AdhocWorkspace();

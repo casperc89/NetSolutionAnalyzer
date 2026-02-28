@@ -2,6 +2,7 @@ namespace System.Web;
 
 public class HttpApplication
 {
+    public HttpServerUtility Server { get; } = new();
 }
 
 public class HttpContext
@@ -11,6 +12,16 @@ public class HttpContext
     public string RequestPath { get; set; } = "/";
 
     public HttpSessionState Session { get; } = new();
+
+    public HttpServerUtility Server { get; } = new();
+
+    public HttpRequest Request { get; } = new();
+
+    public HttpResponse Response { get; } = new();
+
+    public object User { get; set; } = new();
+
+    public Dictionary<string, object?> Items { get; } = new(StringComparer.Ordinal);
 }
 
 public class HttpContextBase
@@ -20,6 +31,22 @@ public class HttpContextBase
 public interface IHttpHandler
 {
     void ProcessRequest(HttpContext context);
+}
+
+public sealed class HttpServerUtility
+{
+    public string MapPath(string virtualPath)
+    {
+        return $"/legacy-root/{virtualPath.TrimStart('~', '/')}";
+    }
+}
+
+public sealed class HttpRequest
+{
+}
+
+public sealed class HttpResponse
+{
 }
 
 public sealed class HttpSessionState
