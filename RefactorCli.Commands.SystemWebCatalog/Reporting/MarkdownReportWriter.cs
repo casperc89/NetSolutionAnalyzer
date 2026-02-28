@@ -57,8 +57,7 @@ public sealed class MarkdownReportWriter : IReportWriter
 
         var byRule = describedRules
             .Concat(fallbackRules)
-            .OrderByDescending(x => x.Count)
-            .ThenBy(x => x.Rule, StringComparer.Ordinal)
+            .OrderBy(x => x.Rule, StringComparer.Ordinal)
             .ToList();
 
         var symbols = allFindings
@@ -87,16 +86,6 @@ public sealed class MarkdownReportWriter : IReportWriter
         }
 
         builder.AppendLine();
-        builder.AppendLine("## Findings by Rule");
-        builder.AppendLine();
-        builder.AppendLine("| Rule | What it detects | Count |");
-        builder.AppendLine("|---|---|---:|");
-        foreach (var rule in byRule)
-        {
-            builder.AppendLine($"| {rule.Rule} | {rule.WhatItDetects} | {rule.Count} |");
-        }
-
-        builder.AppendLine();
         builder.AppendLine("## Findings by Project");
         builder.AppendLine();
         builder.AppendLine("| Project | Findings | Documents Analyzed |");
@@ -112,6 +101,9 @@ public sealed class MarkdownReportWriter : IReportWriter
         builder.AppendLine();
         foreach (var project in orderedProjects)
         {
+            if (project.Findings.Count == 0)
+                continue;
+            
             builder.AppendLine($"#### {project.ProjectName}");
             builder.AppendLine();
 
@@ -124,16 +116,9 @@ public sealed class MarkdownReportWriter : IReportWriter
 
             builder.AppendLine("| Rule | Count |");
             builder.AppendLine("|---|---:|");
-            if (projectFindingsByRule.Count == 0)
+            foreach (var findingByRule in projectFindingsByRule)
             {
-                builder.AppendLine("| _None_ | 0 |");
-            }
-            else
-            {
-                foreach (var findingByRule in projectFindingsByRule)
-                {
-                    builder.AppendLine($"| {findingByRule.Rule} | {findingByRule.Count} |");
-                }
+                builder.AppendLine($"| {findingByRule.Rule} | {findingByRule.Count} |");
             }
 
             builder.AppendLine();
