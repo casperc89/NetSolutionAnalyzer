@@ -16,7 +16,7 @@ public sealed class ViewSystemWebCatalogAnalyzer : ICatalogAnalyzer
 
     private static readonly CatalogRuleDescriptor Rule = new()
     {
-        Id = "SW0006",
+        Id = "SW0005",
         Title = "Razor view System.Web heuristics",
         Category = "View",
         Severity = "Info",

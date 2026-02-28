@@ -123,7 +123,7 @@ Per-finding `Finding`:
 - `SW0002`: semantic symbol usage in `System.Web.*`
 - `SW0003`: base type / inheritance references in `System.Web.*`
 - `SW0004`: `*.config` patterns (`system.web`, auth/membership/handlers/modules, etc.)
-- `SW0006`: heuristic `.cshtml` patterns (`System.Web`, `HttpContext`, `Request.`, etc.)
+- `SW0005`: heuristic `.cshtml` patterns (`System.Web`, `HttpContext`, `Request.`, etc.)
 
 ## How To Extend
 
