@@ -67,6 +67,11 @@ public sealed class SemanticSystemWebSymbolCatalogAnalyzer : ICatalogAnalyzer
                     symbol = semanticModel.GetTypeInfo(expression, ct).Type;
                 }
 
+                if (symbol is null)
+                {
+                    continue;
+                }
+
                 if (!RoslynSymbolHelpers.IsSystemWebSymbol(symbol))
                 {
                     continue;
@@ -77,11 +82,26 @@ public sealed class SemanticSystemWebSymbolCatalogAnalyzer : ICatalogAnalyzer
                     continue;
                 }
 
-                var symbolName = symbol?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var symbolName = FormatSymbol(symbol);
                 if (string.IsNullOrWhiteSpace(symbolName))
                 {
                     continue;
                 }
+
+                var containingType = symbol.ContainingType is null
+                    ? null
+                    : TrimGlobalPrefix(symbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+
+                var properties = new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["MemberKind"] = symbol.Kind.ToString()
+                };
+
+                if (!string.IsNullOrWhiteSpace(containingType))
+                {
+                    properties["ContainingType"] = containingType;
+                }
+
                 var (line, column) = CatalogAccumulator.GetLineAndColumn(node.GetLocation());
                 acc.Add(
                     id: Rule.Id,
@@ -92,8 +112,50 @@ public sealed class SemanticSystemWebSymbolCatalogAnalyzer : ICatalogAnalyzer
                     line: line,
                     column: column,
                     symbol: symbolName,
-                    snippet: node.ToString().Trim());
+                    snippet: node.ToString().Trim(),
+                    properties: properties);
             }
         }
+    }
+
+    private static string? FormatSymbol(ISymbol? symbol)
+    {
+        if (symbol is null)
+        {
+            return null;
+        }
+
+        if (symbol is INamedTypeSymbol namedType)
+        {
+            return namedType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+        }
+
+        if (symbol is IMethodSymbol method)
+        {
+            var containingType = method.ContainingType?.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+            if (string.IsNullOrWhiteSpace(containingType))
+            {
+                return method.Name;
+            }
+
+            var parameterTypes = string.Join(", ", method.Parameters
+                .Select(p => p.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)));
+            return $"{containingType}.{method.Name}({parameterTypes})";
+        }
+
+        var containing = symbol.ContainingType?.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+        if (string.IsNullOrWhiteSpace(containing))
+        {
+            return symbol.Name;
+        }
+
+        return $"{containing}.{symbol.Name}";
+    }
+
+    private static string TrimGlobalPrefix(string value)
+    {
+        return value.StartsWith("global::", StringComparison.Ordinal)
+            ? value["global::".Length..]
+            : value;
     }
 }
