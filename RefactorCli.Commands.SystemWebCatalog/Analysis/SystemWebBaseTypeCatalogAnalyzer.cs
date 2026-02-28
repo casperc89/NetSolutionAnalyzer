@@ -1,11 +1,22 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using RefactorCli.Commands.SystemWebCatalog.Contracts;
 
 namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 
 public sealed class SystemWebBaseTypeCatalogAnalyzer : ICatalogAnalyzer
 {
-    public string Id => "SW0003";
+    private static readonly CatalogRuleDescriptor Rule = new()
+    {
+        Id = "SW0003",
+        Title = "System.Web inheritance and interface implementation",
+        Category = "Type",
+        Severity = "Warning",
+        WhatItDetects = "Types that derive from or implement System.Web-based framework types.",
+        WhyItMatters = "Inheritance dependencies are often high-impact and usually require larger migration design changes."
+    };
+
+    public CatalogRuleDescriptor Descriptor => Rule;
 
     public async Task AnalyzeAsync(Project project, CatalogAccumulator acc, CancellationToken ct)
     {
@@ -46,9 +57,9 @@ public sealed class SystemWebBaseTypeCatalogAnalyzer : ICatalogAnalyzer
                     var fqSymbol = symbol!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                     var (line, column) = CatalogAccumulator.GetLineAndColumn(baseType.GetLocation());
                     acc.Add(
-                        id: Id,
-                        category: "Type",
-                        severity: "Warning",
+                        id: Rule.Id,
+                        category: Rule.Category,
+                        severity: Rule.Severity,
                         message: $"Type derives/implements {fqSymbol}",
                         filePath: document.FilePath ?? document.Name,
                         line: line,

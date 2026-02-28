@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging.Abstractions;
 using RefactorCli.Commands.SystemWebCatalog.Analysis;
+using RefactorCli.Commands.SystemWebCatalog.Contracts;
 
 namespace RefactorCli.Tests;
 
@@ -91,16 +92,24 @@ public class SystemWebAnalyzersTests
 
     private sealed class DeterministicOrderProbeAnalyzer : ICatalogAnalyzer
     {
-        public string Id => "SWX001";
+        public CatalogRuleDescriptor Descriptor { get; } = new()
+        {
+            Id = "SWX001",
+            Title = "Probe",
+            Category = "Member",
+            Severity = "Info",
+            WhatItDetects = "Test probe finding.",
+            WhyItMatters = "Used to validate deterministic ordering."
+        };
 
         public Task AnalyzeAsync(Project project, CatalogAccumulator acc, CancellationToken ct)
         {
             foreach (var doc in project.Documents.OrderByDescending(d => d.Name, StringComparer.Ordinal))
             {
                 acc.Add(
-                    id: "SWX001",
-                    category: "Member",
-                    severity: "Info",
+                    id: Descriptor.Id,
+                    category: Descriptor.Category,
+                    severity: Descriptor.Severity,
                     message: "probe",
                     filePath: doc.Name,
                     line: 10,

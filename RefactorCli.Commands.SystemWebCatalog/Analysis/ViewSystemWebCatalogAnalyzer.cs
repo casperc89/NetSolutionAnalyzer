@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis;
+using RefactorCli.Commands.SystemWebCatalog.Contracts;
 
 namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 
@@ -13,7 +14,17 @@ public sealed class ViewSystemWebCatalogAnalyzer : ICatalogAnalyzer
         "Server."
     ];
 
-    public string Id => "SW0006";
+    private static readonly CatalogRuleDescriptor Rule = new()
+    {
+        Id = "SW0006",
+        Title = "Razor view System.Web heuristics",
+        Category = "View",
+        Severity = "Info",
+        WhatItDetects = "Known text patterns in .cshtml files that suggest System.Web-bound view/runtime usage.",
+        WhyItMatters = "View-level dependencies help estimate Razor migration scope beyond compiled C# symbols."
+    };
+
+    public CatalogRuleDescriptor Descriptor => Rule;
 
     public Task AnalyzeAsync(Project project, CatalogAccumulator acc, CancellationToken ct)
     {
@@ -44,9 +55,9 @@ public sealed class ViewSystemWebCatalogAnalyzer : ICatalogAnalyzer
                 }
 
                 acc.Add(
-                    id: Id,
-                    category: "View",
-                    severity: "Info",
+                    id: Rule.Id,
+                    category: Rule.Category,
+                    severity: Rule.Severity,
                     message: $"View contains heuristic System.Web usage: '{pattern}'",
                     filePath: path,
                     symbol: pattern);

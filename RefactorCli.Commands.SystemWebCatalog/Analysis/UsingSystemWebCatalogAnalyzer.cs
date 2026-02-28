@@ -1,11 +1,22 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using RefactorCli.Commands.SystemWebCatalog.Contracts;
 
 namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 
 public sealed class UsingSystemWebCatalogAnalyzer : ICatalogAnalyzer
 {
-    public string Id => "SW0001";
+    private static readonly CatalogRuleDescriptor Rule = new()
+    {
+        Id = "SW0001",
+        Title = "System.Web namespace imports",
+        Category = "Namespace",
+        Severity = "Info",
+        WhatItDetects = "Using directives that import System.Web or child namespaces.",
+        WhyItMatters = "Identifies source files with direct compile-time dependency on System.Web namespaces."
+    };
+
+    public CatalogRuleDescriptor Descriptor => Rule;
 
     public async Task AnalyzeAsync(Project project, CatalogAccumulator acc, CancellationToken ct)
     {
@@ -38,9 +49,9 @@ public sealed class UsingSystemWebCatalogAnalyzer : ICatalogAnalyzer
 
                 var (line, column) = CatalogAccumulator.GetLineAndColumn(usingDirective.GetLocation());
                 acc.Add(
-                    id: Id,
-                    category: "Namespace",
-                    severity: "Info",
+                    id: Rule.Id,
+                    category: Rule.Category,
+                    severity: Rule.Severity,
                     message: $"Using directive imports {ns}",
                     filePath: document.FilePath ?? document.Name,
                     line: line,

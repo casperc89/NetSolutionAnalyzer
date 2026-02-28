@@ -6,6 +6,8 @@ public sealed class CatalogReport
 
     public required string SolutionPath { get; init; }
 
+    public required IReadOnlyList<CatalogRuleDescriptor> Rules { get; init; }
+
     public required IReadOnlyList<ProjectReport> Projects { get; init; }
 }
 

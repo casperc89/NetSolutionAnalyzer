@@ -6,15 +6,6 @@ namespace RefactorCli.Commands.SystemWebCatalog.Reporting;
 
 public sealed class MarkdownReportWriter : IReportWriter
 {
-    private static readonly IReadOnlyDictionary<string, string> RuleDescriptions = new Dictionary<string, string>(StringComparer.Ordinal)
-    {
-        ["SW0001"] = "Using directives that import System.Web namespaces.",
-        ["SW0002"] = "Semantic references to System.Web types and members in code.",
-        ["SW0003"] = "Types that derive from or implement System.Web-based types.",
-        ["SW0004"] = "Configuration elements that indicate classic System.Web behavior.",
-        ["SW0006"] = "Heuristic System.Web usage patterns found in Razor views."
-    };
-
     private readonly IFileSystem _fileSystem;
 
     public MarkdownReportWriter(IFileSystem fileSystem)
@@ -36,18 +27,36 @@ public sealed class MarkdownReportWriter : IReportWriter
     private static string BuildMarkdown(CatalogReport report)
     {
         var allFindings = report.Projects.SelectMany(p => p.Findings).ToList();
-        var byRule = allFindings
+        var findingsByRule = allFindings
             .GroupBy(f => f.Id)
-            .Select(g =>
+            .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.Ordinal);
+
+        var describedRules = report.Rules
+            .Select(rule => (
+                Rule: rule.Id,
+                Count: findingsByRule.TryGetValue(rule.Id, out var ruleFindings) ? ruleFindings.Count : 0,
+                Category: rule.Category,
+                Severity: rule.Severity,
+                WhatItDetects: rule.WhatItDetects,
+                WhyItMatters: rule.WhyItMatters))
+            .ToList();
+
+        var fallbackRules = findingsByRule
+            .Where(x => report.Rules.All(r => !r.Id.Equals(x.Key, StringComparison.Ordinal)))
+            .Select(x =>
             {
-                var first = g.First();
+                var first = x.Value[0];
                 return (
-                    Rule: g.Key,
-                    Count: g.Count(),
+                    Rule: x.Key,
+                    Count: x.Value.Count,
                     Category: first.Category,
                     Severity: first.Severity,
-                    Description: GetRuleDescription(g.Key, first.Message));
-            })
+                    WhatItDetects: $"See finding message patterns, for example: {first.Message}",
+                    WhyItMatters: "This rule appeared in findings but no analyzer descriptor was available.");
+            });
+
+        var byRule = describedRules
+            .Concat(fallbackRules)
             .OrderByDescending(x => x.Count)
             .ThenBy(x => x.Rule, StringComparer.Ordinal)
             .ToList();
@@ -77,21 +86,21 @@ public sealed class MarkdownReportWriter : IReportWriter
         builder.AppendLine();
         builder.AppendLine("## Rule Explanations");
         builder.AppendLine();
-        builder.AppendLine("| Rule | What it detects | Category | Severity | Findings |");
-        builder.AppendLine("|---|---|---|---|---:|");
+        builder.AppendLine("| Rule | What it detects | Why it matters | Category | Severity | Findings |");
+        builder.AppendLine("|---|---|---|---|---|---:|");
         foreach (var rule in byRule)
         {
-            builder.AppendLine($"| {rule.Rule} | {rule.Description} | {rule.Category} | {rule.Severity} | {rule.Count} |");
+            builder.AppendLine($"| {rule.Rule} | {rule.WhatItDetects} | {rule.WhyItMatters} | {rule.Category} | {rule.Severity} | {rule.Count} |");
         }
 
         builder.AppendLine();
         builder.AppendLine("## Findings by Rule");
         builder.AppendLine();
-        builder.AppendLine("| Rule | Description | Count |");
+        builder.AppendLine("| Rule | What it detects | Count |");
         builder.AppendLine("|---|---|---:|");
         foreach (var rule in byRule)
         {
-            builder.AppendLine($"| {rule.Rule} | {rule.Description} | {rule.Count} |");
+            builder.AppendLine($"| {rule.Rule} | {rule.WhatItDetects} | {rule.Count} |");
         }
 
         builder.AppendLine();
@@ -121,15 +130,5 @@ public sealed class MarkdownReportWriter : IReportWriter
         }
 
         return builder.ToString();
-    }
-
-    private static string GetRuleDescription(string ruleId, string message)
-    {
-        if (RuleDescriptions.TryGetValue(ruleId, out var description))
-        {
-            return description;
-        }
-
-        return $"See finding message patterns, for example: {message}";
     }
 }

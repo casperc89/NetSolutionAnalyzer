@@ -12,7 +12,7 @@ public sealed class CatalogEngine
 
     public CatalogEngine(IEnumerable<ICatalogAnalyzer> analyzers, ILogger<CatalogEngine> logger)
     {
-        _analyzers = analyzers.OrderBy(a => a.Id, StringComparer.Ordinal).ToList();
+        _analyzers = analyzers.OrderBy(a => a.Descriptor.Id, StringComparer.Ordinal).ToList();
         _logger = logger;
     }
 
@@ -63,6 +63,10 @@ public sealed class CatalogEngine
         {
             GeneratedAtUtc = DateTime.UtcNow,
             SolutionPath = solutionPath,
+            Rules = _analyzers
+                .Select(a => a.Descriptor)
+                .OrderBy(r => r.Id, StringComparer.Ordinal)
+                .ToList(),
             Projects = projectReports
                 .OrderBy(p => p.ProjectName, StringComparer.Ordinal)
                 .ThenBy(p => p.ProjectPath, StringComparer.Ordinal)

@@ -1,5 +1,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using RefactorCli.Commands.SystemWebCatalog.Contracts;
 
 namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 
@@ -16,7 +17,17 @@ public sealed class SemanticSystemWebSymbolCatalogAnalyzer : ICatalogAnalyzer
         typeof(BaseListSyntax)
     ];
 
-    public string Id => "SW0002";
+    private static readonly CatalogRuleDescriptor Rule = new()
+    {
+        Id = "SW0002",
+        Title = "Semantic System.Web symbol references",
+        Category = "Member",
+        Severity = "Info",
+        WhatItDetects = "Semantic references to System.Web types and members in C# code.",
+        WhyItMatters = "Captures true symbol usage even when aliases or qualified names hide plain-text patterns."
+    };
+
+    public CatalogRuleDescriptor Descriptor => Rule;
 
     public async Task AnalyzeAsync(Project project, CatalogAccumulator acc, CancellationToken ct)
     {
@@ -63,9 +74,9 @@ public sealed class SemanticSystemWebSymbolCatalogAnalyzer : ICatalogAnalyzer
                 }
                 var (line, column) = CatalogAccumulator.GetLineAndColumn(node.GetLocation());
                 acc.Add(
-                    id: Id,
-                    category: "Member",
-                    severity: "Info",
+                    id: Rule.Id,
+                    category: Rule.Category,
+                    severity: Rule.Severity,
                     message: $"Semantic reference to {symbolName}",
                     filePath: document.FilePath ?? document.Name,
                     line: line,

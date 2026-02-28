@@ -1,6 +1,7 @@
 using System.Xml.Linq;
 using System.Xml;
 using Microsoft.CodeAnalysis;
+using RefactorCli.Commands.SystemWebCatalog.Contracts;
 
 namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 
@@ -17,7 +18,17 @@ public sealed class ConfigSystemWebCatalogAnalyzer : ICatalogAnalyzer
         "compilation"
     ];
 
-    public string Id => "SW0004";
+    private static readonly CatalogRuleDescriptor Rule = new()
+    {
+        Id = "SW0004",
+        Title = "Classic System.Web configuration markers",
+        Category = "Config",
+        Severity = "Info",
+        WhatItDetects = "web.config/app.config elements associated with classic ASP.NET System.Web runtime behavior.",
+        WhyItMatters = "Configuration dependencies often map to middleware, hosting, auth, and pipeline work during migration."
+    };
+
+    public CatalogRuleDescriptor Descriptor => Rule;
 
     public Task AnalyzeAsync(Project project, CatalogAccumulator acc, CancellationToken ct)
     {
@@ -61,9 +72,9 @@ public sealed class ConfigSystemWebCatalogAnalyzer : ICatalogAnalyzer
 
                 var lineInfo = (IXmlLineInfo)element;
                 acc.Add(
-                    id: Id,
-                    category: "Config",
-                    severity: "Info",
+                    id: Rule.Id,
+                    category: Rule.Category,
+                    severity: Rule.Severity,
                     message: $"Config element <{name}> suggests classic System.Web configuration",
                     filePath: configPath,
                     line: lineInfo.HasLineInfo() ? lineInfo.LineNumber : null,
