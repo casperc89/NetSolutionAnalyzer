@@ -20,12 +20,11 @@ public sealed class SystemWebCatalogCommandModule : ICommandModule
         services.AddRoslynAnalysis();
 
         var solutionOption = new Option<string>("--solution", "Path to a .sln file");
-        var repoOption = new Option<string?>("--repo", "Path to a repository root (reserved for future use)");
         var outputOption = new Option<string>("--output", () => "./refactor-reports", "Output directory");
         var formatOption = new Option<string[]>(
             "--format",
             () => ["json", "md"],
-            "Output formats: json|md|sarif");
+            "Output formats: json|md");
         formatOption.AllowMultipleArgumentsPerToken = true;
         var includeRuleOption = new Option<string[]>(
             aliases: ["--include-rule", "--include-rules"],
@@ -36,12 +35,11 @@ public sealed class SystemWebCatalogCommandModule : ICommandModule
         var verbosityOption = new Option<string>("--verbosity", () => "normal", "quiet|normal|diag");
 
         root.AddGlobalOption(solutionOption);
-        root.AddGlobalOption(repoOption);
         root.AddGlobalOption(outputOption);
         root.AddGlobalOption(formatOption);
         root.AddGlobalOption(verbosityOption);
 
-        var systemweb = new Command("systemweb", "System.Web migration catalog commands");
+        var systemweb = new Command("systemweb", "System.Web analysis");
         var catalog = new Command("catalog", "Catalog System.Web usage");
         
         catalog.AddOption(includeRuleOption);
