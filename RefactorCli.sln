@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorCli.SampleLegacyWeb
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorCli.SampleSystemWebShim", "RefactorCli.SampleSystemWebShim\RefactorCli.SampleSystemWebShim.csproj", "{7292AD71-07D1-4290-A3C0-57C284C0C144}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorCli.Commands.DependencyGraph", "RefactorCli.Commands.DependencyGraph\RefactorCli.Commands.DependencyGraph.csproj", "{81C008A4-8B36-422F-88D8-142C082871B8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,5 +56,9 @@ Global
 		{7292AD71-07D1-4290-A3C0-57C284C0C144}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7292AD71-07D1-4290-A3C0-57C284C0C144}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7292AD71-07D1-4290-A3C0-57C284C0C144}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81C008A4-8B36-422F-88D8-142C082871B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81C008A4-8B36-422F-88D8-142C082871B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81C008A4-8B36-422F-88D8-142C082871B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81C008A4-8B36-422F-88D8-142C082871B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

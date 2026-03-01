@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RefactorCli.Abstractions;
+using RefactorCli.Commands.DependencyGraph;
 using RefactorCli.Commands.SystemWebCatalog;
 using RefactorCli.Infrastructure;
 using System.CommandLine;
@@ -19,6 +20,7 @@ using var host = Host.CreateDefaultBuilder(args)
         services.AddInfrastructure();
         
         services.AddModule<SystemWebCatalogCommandModule>(rootCommand);
+        services.AddModule<DependencyGraphCommandModule>(rootCommand);
     })
     .Build();
 

@@ -18,6 +18,7 @@ Current focus: generate a repeatable inventory of `System.Web` usage across a so
 - `RefactorCli.Abstractions`: shared generic contracts and runtime primitives (`ICommandModule`, `ICommandHandler<T>`, console/filesystem abstractions, exit codes).
 - `RefactorCli.Infrastructure`: generic implementations (`IFileSystem`, `IAppConsole`).
 - `RefactorCli.Commands.SystemWebCatalog`: complete `systemweb catalog` feature (command module, handler, analysis pipeline, contracts, report writers).
+- `RefactorCli.Commands.DependencyGraph`: `dependency graph` feature for solution project graphing, postorder upgrade sequencing, and transitive upstream class dependency inventory.
 - `RefactorCli.Tests`: analyzer and ordering tests.
 - `RefactorCli.SampleLegacyWeb`: sample legacy-style project for deterministic analyzer coverage.
 
@@ -65,12 +66,24 @@ dotnet run --project RefactorCli/RefactorCli.csproj -- \
   --format md
 ```
 
+### Run Dependency Graph
+```bash
+dotnet run --project RefactorCli/RefactorCli.csproj -- \
+  dependency graph \
+  --solution /path/to/your.sln \
+  --output ./refactor-reports \
+  --format json \
+  --format md \
+  --max-classes-per-project 100
+```
+
 ### Options
 - `--solution <path>`: path to solution file (required).
 - `--repo <path>`: reserved for future repo-first flows.
 - `--output <path>`: report output directory.
 - `--format json|md|sarif`: output formats (`json` and `md` currently implemented).
 - `--include-rule <id>` / `--include-rules <id1,id2>`: include only the specified rule IDs.
+- `--max-classes-per-project <n>`: dependency graph markdown truncation limit for class listings.
 - `--verbosity quiet|normal|diag`: command verbosity.
 
 ### Exit Codes

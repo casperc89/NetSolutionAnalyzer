@@ -4,6 +4,7 @@
     <ProjectReference Include="..\RefactorCli.Abstractions\RefactorCli.Abstractions.csproj" />
     <ProjectReference Include="..\RefactorCli.Infrastructure\RefactorCli.Infrastructure.csproj" />
     <ProjectReference Include="..\RefactorCli.Commands.SystemWebCatalog\RefactorCli.Commands.SystemWebCatalog.csproj" />
+    <ProjectReference Include="..\RefactorCli.Commands.DependencyGraph\RefactorCli.Commands.DependencyGraph.csproj" />
   </ItemGroup>
 
   <ItemGroup>
