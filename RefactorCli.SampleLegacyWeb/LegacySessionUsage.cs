@@ -8,8 +8,12 @@ public sealed class LegacySessionController : Controller
 {
     public void HandleSession()
     {
+        var dynamicKey = "Controller_" + DateTime.UtcNow.Second;
+
         Session["ControllerUserId"] = "42";
         _ = Session["ControllerUserId"];
+        Session[dynamicKey] = "dynamic-write";
+        _ = Session[dynamicKey];
         _ = Session.GetString("ControllerUserId");
 
         HttpContext.Current.Session["CurrentUserId"] = "42";

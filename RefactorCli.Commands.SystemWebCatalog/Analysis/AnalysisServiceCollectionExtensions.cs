@@ -20,8 +20,12 @@ public static class AnalysisServiceCollectionExtensions
         services.AddSingleton<ICatalogAnalyzer, HttpApplicationLifecycleCatalogAnalyzer>();
         services.AddSingleton<ICatalogAnalyzer, ServerMapPathCatalogAnalyzer>();
         services.AddSingleton<ICatalogAnalyzer, SessionUsageCatalogAnalyzer>();
+        services.AddSingleton<ICatalogAnalyzer, SessionReadCatalogAnalyzer>();
+        services.AddSingleton<ICatalogAnalyzer, SessionWriteCatalogAnalyzer>();
         services.AddSingleton<ICatalogAnalyzer, PostedFileCatalogAnalyzer>();
         services.AddSingleton<ICatalogAnalyzer, HeadersCookiesCatalogAnalyzer>();
+        services.AddSingleton<ICatalogAnalyzer, CookieReadCatalogAnalyzer>();
+        services.AddSingleton<ICatalogAnalyzer, CookieWriteCatalogAnalyzer>();
 
         return services;
     }

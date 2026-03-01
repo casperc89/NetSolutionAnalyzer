@@ -67,6 +67,46 @@ public sealed class MarkdownReportWriter : IReportWriter
             .OrderByDescending(x => x.Count)
             .ThenBy(x => x.Symbol, StringComparer.Ordinal)
             .Take(20);
+        var sessionKeys = allFindings
+            .Select(f =>
+            {
+                if (f.Properties is not null &&
+                    f.Properties.TryGetValue("sessionKey", out var keyValue) &&
+                    !string.IsNullOrWhiteSpace(keyValue))
+                {
+                    return keyValue;
+                }
+
+                return null;
+            })
+            .Where(key => key is not null)
+            .Select(key => key!)
+            .GroupBy(key => key)
+            .Select(g => (Key: g.Key, Count: g.Count()))
+            .OrderByDescending(x => x.Count)
+            .ThenBy(x => x.Key, StringComparer.Ordinal)
+            .Take(20)
+            .ToList();
+        var cookieKeys = allFindings
+            .Select(f =>
+            {
+                if (f.Properties is not null &&
+                    f.Properties.TryGetValue("cookieKey", out var keyValue) &&
+                    !string.IsNullOrWhiteSpace(keyValue))
+                {
+                    return keyValue;
+                }
+
+                return null;
+            })
+            .Where(key => key is not null)
+            .Select(key => key!)
+            .GroupBy(key => key)
+            .Select(g => (Key: g.Key, Count: g.Count()))
+            .OrderByDescending(x => x.Count)
+            .ThenBy(x => x.Key, StringComparer.Ordinal)
+            .Take(20)
+            .ToList();
 
         var builder = new StringBuilder();
         builder.AppendLine("# System.Web Catalog Report");
@@ -130,6 +170,36 @@ public sealed class MarkdownReportWriter : IReportWriter
         foreach (var symbol in symbols)
         {
             builder.AppendLine($"- `{symbol.Symbol}` ({symbol.Count})");
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("## Top Session Keys");
+        builder.AppendLine();
+        if (sessionKeys.Count == 0)
+        {
+            builder.AppendLine("_No session key findings captured._");
+        }
+        else
+        {
+            foreach (var key in sessionKeys)
+            {
+                builder.AppendLine($"- `{key.Key}` ({key.Count})");
+            }
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("## Top Cookie Keys");
+        builder.AppendLine();
+        if (cookieKeys.Count == 0)
+        {
+            builder.AppendLine("_No cookie key findings captured._");
+        }
+        else
+        {
+            foreach (var key in cookieKeys)
+            {
+                builder.AppendLine($"- `{key.Key}` ({key.Count})");
+            }
         }
 
         builder.AppendLine();

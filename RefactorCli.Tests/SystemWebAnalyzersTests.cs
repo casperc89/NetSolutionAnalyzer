@@ -237,6 +237,126 @@ public class SystemWebAnalyzersTests
     }
 
     [Fact]
+    public async Task SW0401_Finds_Session_Reads_And_Captures_Keys()
+    {
+        var project = CreateProject("""
+            namespace System.Web
+            {
+                public class HttpSessionState
+                {
+                    public object this[string key]
+                    {
+                        get => key;
+                        set {}
+                    }
+                }
+            }
+
+            namespace System.Web.Mvc
+            {
+                public abstract class Controller
+                {
+                    public System.Web.HttpSessionState Session => new();
+                }
+            }
+
+            namespace Demo
+            {
+                public sealed class C : System.Web.Mvc.Controller
+                {
+                    public void M(string dynamicKey)
+                    {
+                        const string constKey = "ConstRead";
+                        _ = Session["LiteralRead"];
+                        _ = Session[constKey];
+                        _ = Session[dynamicKey];
+                        Session["WriteOnly"] = "v";
+                    }
+                }
+            }
+            """);
+
+        var analyzer = new SessionReadCatalogAnalyzer();
+        var acc = new CatalogAccumulator();
+        await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
+
+        Assert.Contains(acc.Findings, f => f.Id == "SW0401" &&
+                                           f.Symbol == "System.Web.HttpSessionState.this[]" &&
+                                           f.Properties is not null &&
+                                           f.Properties.TryGetValue("sessionKey", out var key) &&
+                                           key == "LiteralRead");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0401" &&
+                                           f.Properties is not null &&
+                                           f.Properties.TryGetValue("sessionKey", out var key) &&
+                                           key == "ConstRead");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0401" &&
+                                           f.Properties is not null &&
+                                           f.Properties.TryGetValue("sessionKey", out var key) &&
+                                           key == "<dynamic>");
+        Assert.DoesNotContain(acc.Findings, f => f.Id == "SW0401" && f.Snippet == "Session[\"WriteOnly\"]");
+    }
+
+    [Fact]
+    public async Task SW0402_Finds_Session_Writes_And_Captures_Keys()
+    {
+        var project = CreateProject("""
+            namespace System.Web
+            {
+                public class HttpSessionState
+                {
+                    public object this[string key]
+                    {
+                        get => key;
+                        set {}
+                    }
+                }
+            }
+
+            namespace System.Web.Mvc
+            {
+                public abstract class Controller
+                {
+                    public System.Web.HttpSessionState Session => new();
+                }
+            }
+
+            namespace Demo
+            {
+                public sealed class C : System.Web.Mvc.Controller
+                {
+                    public void M(string dynamicKey)
+                    {
+                        const string constKey = "ConstWrite";
+                        Session["LiteralWrite"] = "v1";
+                        Session[constKey] = "v2";
+                        Session[dynamicKey] = "v3";
+                        _ = Session["ReadOnly"];
+                    }
+                }
+            }
+            """);
+
+        var analyzer = new SessionWriteCatalogAnalyzer();
+        var acc = new CatalogAccumulator();
+        await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
+
+        Assert.Contains(acc.Findings, f => f.Id == "SW0402" &&
+                                           f.Symbol == "System.Web.HttpSessionState.this[]" &&
+                                           f.Properties is not null &&
+                                           f.Properties.TryGetValue("sessionKey", out var key) &&
+                                           key == "LiteralWrite");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0402" &&
+                                           f.Properties is not null &&
+                                           f.Properties.TryGetValue("sessionKey", out var key) &&
+                                           key == "ConstWrite");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0402" &&
+                                           f.Properties is not null &&
+                                           f.Properties.TryGetValue("sessionKey", out var key) &&
+                                           key == "<dynamic>");
+        Assert.DoesNotContain(acc.Findings, f => f.Id == "SW0402" && f.Snippet == "Session[\"ReadOnly\"]");
+    }
+
+    [Fact]
     public async Task SW0500_Finds_HttpPostedFileBase_RequestFiles_And_InputStream()
     {
         var project = CreateProject("""
@@ -358,6 +478,124 @@ public class SystemWebAnalyzersTests
         await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
 
         Assert.DoesNotContain(acc.Findings, f => f.Id == "SW0702");
+    }
+
+    [Fact]
+    public async Task SW0703_Finds_Cookie_Reads_And_Captures_Keys()
+    {
+        var project = CreateProject("""
+            namespace System.Web
+            {
+                public class HttpCookie {}
+
+                public class HttpCookieCollection
+                {
+                    public HttpCookie this[string name]
+                    {
+                        get => new();
+                        set {}
+                    }
+                }
+
+                public class HttpRequest
+                {
+                    public HttpCookieCollection Cookies => new();
+                }
+            }
+
+            namespace Demo
+            {
+                public class C
+                {
+                    public void M(System.Web.HttpRequest req, string dynamicKey)
+                    {
+                        const string constKey = "ConstRead";
+                        _ = req.Cookies["Auth"];
+                        _ = req.Cookies[constKey];
+                        _ = req.Cookies[dynamicKey];
+                        req.Cookies["WriteOnly"] = new System.Web.HttpCookie();
+                    }
+                }
+            }
+            """);
+
+        var analyzer = new CookieReadCatalogAnalyzer();
+        var acc = new CatalogAccumulator();
+        await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
+
+        Assert.Contains(acc.Findings, f => f.Id == "SW0703" &&
+                                           f.Symbol == "System.Web.HttpCookieCollection.this[]" &&
+                                           f.Properties is not null &&
+                                           f.Properties.TryGetValue("cookieKey", out var key) &&
+                                           key == "Auth");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0703" &&
+                                           f.Properties is not null &&
+                                           f.Properties.TryGetValue("cookieKey", out var key) &&
+                                           key == "ConstRead");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0703" &&
+                                           f.Properties is not null &&
+                                           f.Properties.TryGetValue("cookieKey", out var key) &&
+                                           key == "<dynamic>");
+        Assert.DoesNotContain(acc.Findings, f => f.Id == "SW0703" && f.Snippet == "req.Cookies[\"WriteOnly\"]");
+    }
+
+    [Fact]
+    public async Task SW0704_Finds_Cookie_Writes_And_Captures_Keys()
+    {
+        var project = CreateProject("""
+            namespace System.Web
+            {
+                public class HttpCookie {}
+
+                public class HttpCookieCollection
+                {
+                    public HttpCookie this[string name]
+                    {
+                        get => new();
+                        set {}
+                    }
+                }
+
+                public class HttpResponse
+                {
+                    public HttpCookieCollection Cookies => new();
+                }
+            }
+
+            namespace Demo
+            {
+                public class C
+                {
+                    public void M(System.Web.HttpResponse res, string dynamicKey)
+                    {
+                        const string constKey = "ConstWrite";
+                        res.Cookies["Auth"] = new System.Web.HttpCookie();
+                        res.Cookies[constKey] = new System.Web.HttpCookie();
+                        res.Cookies[dynamicKey] = new System.Web.HttpCookie();
+                        _ = res.Cookies["ReadOnly"];
+                    }
+                }
+            }
+            """);
+
+        var analyzer = new CookieWriteCatalogAnalyzer();
+        var acc = new CatalogAccumulator();
+        await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
+
+        Assert.Contains(acc.Findings, f => f.Id == "SW0704" &&
+                                           f.Symbol == "System.Web.HttpCookieCollection.this[]" &&
+                                           f.Properties is not null &&
+                                           f.Properties.TryGetValue("cookieKey", out var key) &&
+                                           key == "Auth");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0704" &&
+                                           f.Properties is not null &&
+                                           f.Properties.TryGetValue("cookieKey", out var key) &&
+                                           key == "ConstWrite");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0704" &&
+                                           f.Properties is not null &&
+                                           f.Properties.TryGetValue("cookieKey", out var key) &&
+                                           key == "<dynamic>");
+        Assert.DoesNotContain(acc.Findings, f => f.Id == "SW0704" && f.Snippet == "res.Cookies[\"ReadOnly\"]");
     }
 
     [Fact]

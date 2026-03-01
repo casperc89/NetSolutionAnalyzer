@@ -25,7 +25,7 @@ Current focus: generate a repeatable inventory of `System.Web` usage across a so
 - `Analysis/`
   - Roslyn solution loading (`MSBuildRoslynSolutionLoader`)
   - analyzer contract (`ICatalogAnalyzer`)
-  - analyzer implementations (`SW0001`-`SW0005`)
+  - analyzer implementations (`SW0001`-`SW0704`)
   - finding aggregation (`CatalogAccumulator`)
   - report assembly (`CatalogEngine`)
   - orchestration service (`SystemWebCatalogService`)
@@ -115,6 +115,16 @@ dotnet run --project RefactorCli/RefactorCli.csproj -- \
 - `SW0003` - Inheritance/interface use of System.Web framework types.
 - `SW0004` - Classic System.Web configuration markers in `*.config`.
 - `SW0005` - Heuristic System.Web usage patterns in Razor views.
+- `SW0100` - `HttpContext.Current` ambient context access.
+- `SW0101` - `HttpApplication` lifecycle handlers and request event methods.
+- `SW0104` - `Server.MapPath` and `HttpServerUtility` usage.
+- `SW0400` - Broad session usage patterns (`Session`, `HttpContext.Current.Session`, session collection types, extension usage).
+- `SW0401` - Session key reads (`Session[key]`) with captured `sessionKey`.
+- `SW0402` - Session key writes (`Session[key] = ...`) with captured `sessionKey`.
+- `SW0500` - Legacy posted-file APIs (`HttpPostedFileBase`, `Request.Files`, `InputStream`).
+- `SW0702` - Legacy cookie APIs (`Request.Cookies`, `Response.Cookies`, `HttpCookie`).
+- `SW0703` - Cookie key reads (`Cookies[key]`) with captured `cookieKey`.
+- `SW0704` - Cookie key writes (`Cookies[key] = ...`) with captured `cookieKey`.
 
 Rule metadata (what it detects + why it matters) is defined directly in analyzer descriptors and surfaced in markdown reports.
 
