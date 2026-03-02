@@ -72,14 +72,13 @@ public sealed class SessionUsageCatalogAnalyzer : ICatalogAnalyzer
 
             foreach (var elementAccess in syntaxRoot.DescendantNodes().OfType<ElementAccessExpressionSyntax>())
             {
-                var symbol = GetSymbol(semanticModel, elementAccess.Expression, ct);
-                if (symbol is IPropertySymbol property && IsSessionProperty(property))
+                if (SessionAccessAnalyzerHelpers.IsSessionIndexerAccess(elementAccess, semanticModel, ct, out var symbolName))
                 {
                     AddFinding(
                         acc,
                         document,
                         elementAccess.GetLocation(),
-                        "SessionStateItemCollection.this[]",
+                        symbolName,
                         elementAccess.ToString().Trim());
                 }
             }
@@ -94,7 +93,8 @@ public sealed class SessionUsageCatalogAnalyzer : ICatalogAnalyzer
 
                 var reducedReceiver = method.ReducedFrom?.Parameters.FirstOrDefault()?.Type;
                 var declaredReceiver = method.Parameters.FirstOrDefault()?.Type;
-                if (!IsSessionLikeType(reducedReceiver) && !IsSessionLikeType(declaredReceiver))
+                if (!SessionAccessAnalyzerHelpers.IsSessionLikeType(reducedReceiver) &&
+                    !SessionAccessAnalyzerHelpers.IsSessionLikeType(declaredReceiver))
                 {
                     continue;
                 }
@@ -148,32 +148,8 @@ public sealed class SessionUsageCatalogAnalyzer : ICatalogAnalyzer
 
     private static bool IsSessionProperty(IPropertySymbol property)
     {
-        return property.Name.Equals("Session", StringComparison.Ordinal) && IsSessionLikeType(property.Type);
-    }
-
-    private static bool IsSessionLikeType(ITypeSymbol? type)
-    {
-        if (type is null)
-        {
-            return false;
-        }
-
-        var ns = type.ContainingNamespace?.ToDisplayString();
-        if (type.Name.Equals("HttpSessionState", StringComparison.Ordinal) &&
-            ns is not null &&
-            ns.Equals("System.Web", StringComparison.Ordinal))
-        {
-            return true;
-        }
-
-        if (type.Name.Equals("SessionStateItemCollection", StringComparison.Ordinal) &&
-            ns is not null &&
-            ns.Equals("System.Web.SessionState", StringComparison.Ordinal))
-        {
-            return true;
-        }
-
-        return false;
+        return property.Name.Equals("Session", StringComparison.Ordinal) &&
+               SessionAccessAnalyzerHelpers.IsSessionLikeType(property.Type);
     }
 
     private static bool IsSessionStateItemCollection(INamedTypeSymbol type)

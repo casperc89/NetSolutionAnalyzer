@@ -84,7 +84,7 @@ internal static class SessionAccessAnalyzerHelpers
         return symbolInfo.Symbol ?? symbolInfo.CandidateSymbols.FirstOrDefault();
     }
 
-    private static bool IsSessionLikeType(ITypeSymbol? type)
+    internal static bool IsSessionLikeType(ITypeSymbol? type)
     {
         if (type is null)
         {
@@ -93,6 +93,14 @@ internal static class SessionAccessAnalyzerHelpers
 
         var ns = type.ContainingNamespace?.ToDisplayString();
         if (type.Name.Equals("HttpSessionState", StringComparison.Ordinal) &&
+            ns is not null &&
+            (ns.Equals("System.Web", StringComparison.Ordinal) ||
+             ns.Equals("System.Web.SessionState", StringComparison.Ordinal)))
+        {
+            return true;
+        }
+
+        if (type.Name.Equals("HttpSessionStateBase", StringComparison.Ordinal) &&
             ns is not null &&
             ns.Equals("System.Web", StringComparison.Ordinal))
         {

@@ -11,7 +11,7 @@ namespace System.Web
 
         public string RequestPath { get; set; } = "/";
 
-        public HttpSessionState Session { get; } = new();
+        public System.Web.SessionState.HttpSessionState Session { get; } = new();
 
         public HttpServerUtility Server { get; } = new();
 
@@ -26,6 +26,18 @@ namespace System.Web
 
     public class HttpContextBase
     {
+        public HttpSessionStateBase Session { get; } = new();
+    }
+
+    public class HttpSessionStateBase
+    {
+        private readonly Dictionary<string, object?> _values = new(StringComparer.Ordinal);
+
+        public virtual object? this[string key]
+        {
+            get => _values.TryGetValue(key, out var value) ? value : null;
+            set => _values[key] = value;
+        }
     }
 
     public interface IHttpHandler
@@ -108,7 +120,21 @@ namespace System.Web
         }
     }
 
-    public sealed class HttpSessionState
+}
+
+namespace System.Web.Mvc
+{
+    public abstract class Controller
+    {
+        public HttpContextBase HttpContext { get; } = new();
+
+        public System.Web.HttpSessionStateBase Session => HttpContext.Session;
+    }
+}
+
+namespace System.Web.SessionState
+{
+    public class HttpSessionState
     {
         private readonly Dictionary<string, object?> _values = new(StringComparer.Ordinal);
 
@@ -118,18 +144,7 @@ namespace System.Web
             set => _values[key] = value;
         }
     }
-}
 
-namespace System.Web.Mvc
-{
-    public abstract class Controller
-    {
-        public System.Web.HttpSessionState Session => System.Web.HttpContext.Current.Session;
-    }
-}
-
-namespace System.Web.SessionState
-{
     public sealed class SessionStateItemCollection
     {
     }

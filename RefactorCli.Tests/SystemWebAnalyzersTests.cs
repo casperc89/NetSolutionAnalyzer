@@ -230,7 +230,7 @@ public class SystemWebAnalyzersTests
         await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
 
         Assert.Contains(acc.Findings, f => f.Id == "SW0400" && f.Symbol == "System.Web.Mvc.Controller.Session");
-        Assert.Contains(acc.Findings, f => f.Id == "SW0400" && f.Symbol == "SessionStateItemCollection.this[]");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0400" && f.Symbol == "System.Web.HttpSessionState.this[]");
         Assert.Contains(acc.Findings, f => f.Id == "SW0400" && f.Symbol == "System.Web.HttpContext.Current.Session");
         Assert.Contains(acc.Findings, f => f.Id == "SW0400" && f.Symbol is not null && f.Symbol.Contains(".GetString(...)", StringComparison.Ordinal));
         Assert.Contains(acc.Findings, f => f.Id == "SW0400" && f.Symbol == "System.Web.SessionState.SessionStateItemCollection");
@@ -354,6 +354,120 @@ public class SystemWebAnalyzersTests
                                            f.Properties.TryGetValue("sessionKey", out var key) &&
                                            key == "<dynamic>");
         Assert.DoesNotContain(acc.Findings, f => f.Id == "SW0402" && f.Snippet == "Session[\"ReadOnly\"]");
+    }
+
+    [Fact]
+    public async Task SW0400_0401_0402_Find_RealWorld_HttpSessionState_And_HttpSessionStateBase_Patterns()
+    {
+        var project = CreateProject("""
+            namespace System.Web.SessionState
+            {
+                public class HttpSessionState
+                {
+                    public object this[string key]
+                    {
+                        get => key;
+                        set {}
+                    }
+                }
+            }
+
+            namespace System.Web
+            {
+                public class HttpSessionStateBase
+                {
+                    public virtual object this[string key]
+                    {
+                        get => key;
+                        set {}
+                    }
+                }
+
+                public class HttpContext
+                {
+                    public static HttpContext Current => new();
+                    public System.Web.SessionState.HttpSessionState Session => new();
+                }
+            }
+
+            namespace System.Web.Mvc
+            {
+                public class HttpContextBase
+                {
+                    public System.Web.HttpSessionStateBase Session => new();
+                }
+
+                public abstract class Controller
+                {
+                    public HttpContextBase HttpContext => new();
+                }
+            }
+
+            namespace Demo
+            {
+                public static class K
+                {
+                    public const string LANG = "KAYTTOLIITTYMA_KIELI";
+                    public const string PREFIX = "ONMINIKILPAILUTUS_";
+                }
+
+                public class AmbientUsage
+                {
+                    public void M(int id)
+                    {
+                        string language = (string)System.Web.HttpContext.Current.Session[K.LANG];
+                        if (System.Web.HttpContext.Current.Session[K.PREFIX + id] == null) {}
+                        System.Web.HttpContext.Current.Session["PROCUREMENT_DECISIONID"] = id;
+                        System.Web.SessionState.HttpSessionState session = System.Web.HttpContext.Current.Session;
+                        _ = session[K.LANG];
+                    }
+                }
+
+                public class ControllerUsage : System.Web.Mvc.Controller
+                {
+                    public void M()
+                    {
+                        HttpContext.Session[K.LANG] = "fi";
+                        HttpContext.Session["Moduulit"] = new object();
+                        string lang = (string)HttpContext.Session[K.LANG];
+                    }
+                }
+            }
+            """);
+
+        var usageAnalyzer = new SessionUsageCatalogAnalyzer();
+        var readAnalyzer = new SessionReadCatalogAnalyzer();
+        var writeAnalyzer = new SessionWriteCatalogAnalyzer();
+
+        var usageAcc = new CatalogAccumulator();
+        var readAcc = new CatalogAccumulator();
+        var writeAcc = new CatalogAccumulator();
+
+        await usageAnalyzer.AnalyzeAsync(project, usageAcc, CancellationToken.None);
+        await readAnalyzer.AnalyzeAsync(project, readAcc, CancellationToken.None);
+        await writeAnalyzer.AnalyzeAsync(project, writeAcc, CancellationToken.None);
+
+        Assert.Contains(usageAcc.Findings, f => f.Id == "SW0400" && f.Symbol == "System.Web.HttpContext.Current.Session");
+        Assert.Contains(usageAcc.Findings, f => f.Id == "SW0400" && f.Symbol == "System.Web.SessionState.HttpSessionState.this[]");
+        Assert.Contains(usageAcc.Findings, f => f.Id == "SW0400" && f.Symbol == "System.Web.HttpSessionStateBase.this[]");
+
+        Assert.Contains(readAcc.Findings, f => f.Id == "SW0401" &&
+                                               f.Properties is not null &&
+                                               f.Properties.TryGetValue("sessionKey", out var key) &&
+                                               key == "KAYTTOLIITTYMA_KIELI");
+        Assert.Contains(readAcc.Findings, f => f.Id == "SW0401" &&
+                                               f.Properties is not null &&
+                                               f.Properties.TryGetValue("sessionKey", out var key) &&
+                                               key == "<dynamic>");
+
+        Assert.Contains(writeAcc.Findings, f => f.Id == "SW0402" &&
+                                                f.Properties is not null &&
+                                                f.Properties.TryGetValue("sessionKey", out var key) &&
+                                                key == "PROCUREMENT_DECISIONID");
+        Assert.Contains(writeAcc.Findings, f => f.Id == "SW0402" &&
+                                                f.Properties is not null &&
+                                                f.Properties.TryGetValue("sessionKey", out var key) &&
+                                                key == "Moduulit");
     }
 
     [Fact]
