@@ -11,6 +11,8 @@ public sealed class DependencyGraphOptions
     public required VerbosityLevel Verbosity { get; init; }
 
     public int MaxClassesPerProject { get; init; } = 50;
+
+    public bool ExcludeTestProjects { get; init; }
 }
 
 public enum VerbosityLevel

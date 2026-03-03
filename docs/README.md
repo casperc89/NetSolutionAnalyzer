@@ -84,6 +84,7 @@ dotnet run --project RefactorCli/RefactorCli.csproj -- \
 - `--format json|md|sarif`: output formats (`json` and `md` currently implemented).
 - `--include-rule <id>` / `--include-rules <id1,id2>`: include only the specified rule IDs.
 - `--max-classes-per-project <n>`: dependency graph markdown truncation limit for class listings.
+- `--exclude-test-projects`: exclude projects with names ending in `.Tests` (supported by `systemweb catalog` and `dependency graph`).
 - `--verbosity quiet|normal|diag`: command verbosity.
 
 ### Exit Codes

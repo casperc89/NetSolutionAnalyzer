@@ -11,6 +11,8 @@ public sealed class SystemWebCatalogOptions
     public IReadOnlyList<string> IncludedRules { get; init; } = [];
 
     public VerbosityLevel Verbosity { get; init; } = VerbosityLevel.Normal;
+
+    public bool ExcludeTestProjects { get; init; }
 }
 
 public enum VerbosityLevel

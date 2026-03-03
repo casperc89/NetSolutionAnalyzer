@@ -35,7 +35,7 @@ public sealed class DependencyGraphService
         try
         {
             var solution = await _solutionLoader.LoadSolutionAsync(fullSolutionPath, ct);
-            return await _engine.AnalyzeAsync(solution, fullSolutionPath, ct);
+            return await _engine.AnalyzeAsync(solution, fullSolutionPath, options.ExcludeTestProjects, ct);
         }
         catch (InvalidCommandOptionsException)
         {

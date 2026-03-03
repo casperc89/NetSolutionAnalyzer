@@ -31,6 +31,7 @@ public sealed class SystemWebCatalogCommandModule : ICommandModule
             getDefaultValue: () => [],
             description: "Only run the specified rule IDs (for example: SW0001, SW0003).");
         includeRuleOption.AllowMultipleArgumentsPerToken = true;
+        var excludeTestProjectsOption = new Option<bool>("--exclude-test-projects", "Exclude projects with names ending in '.Tests'");
 
         var verbosityOption = new Option<string>("--verbosity", () => "normal", "quiet|normal|diag");
 
@@ -43,8 +44,9 @@ public sealed class SystemWebCatalogCommandModule : ICommandModule
         var catalog = new Command("catalog", "Catalog System.Web usage");
         
         catalog.AddOption(includeRuleOption);
+        catalog.AddOption(excludeTestProjectsOption);
 
-        catalog.SetHandler(async (string? solution, string output, string[] format, string[] includeRules, string verbosity) =>
+        catalog.SetHandler(async (string? solution, string output, string[] format, string[] includeRules, bool excludeTestProjects, string verbosity) =>
         {
             if (string.IsNullOrWhiteSpace(solution))
             {
@@ -70,6 +72,7 @@ public sealed class SystemWebCatalogCommandModule : ICommandModule
                 OutputPath = output,
                 Formats = format,
                 IncludedRules = normalizedIncludedRules,
+                ExcludeTestProjects = excludeTestProjects,
                 Verbosity = verbosity.ToLowerInvariant() switch
                 {
                     "quiet" => VerbosityLevel.Quiet,
@@ -80,7 +83,7 @@ public sealed class SystemWebCatalogCommandModule : ICommandModule
 
             var exitCode = await handler.ExecuteAsync(options, CancellationToken.None);
             Environment.ExitCode = exitCode;
-        }, solutionOption, outputOption, formatOption, includeRuleOption, verbosityOption);
+        }, solutionOption, outputOption, formatOption, includeRuleOption, excludeTestProjectsOption, verbosityOption);
 
         systemweb.AddCommand(catalog);
         root.AddCommand(systemweb);

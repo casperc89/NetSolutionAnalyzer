@@ -44,6 +44,23 @@ public sealed class DependencyGraphAnalysisEngineTests
         Assert.Equal(1, data.UniqueTransitiveUpstreamClassCount);
     }
 
+    [Fact]
+    public async Task AnalyzeAsync_ExcludeTestProjects_Removes_DotTests_Projects_From_Report()
+    {
+        var solution = CreateGraphSolution(
+            ("Core", "namespace CoreNs; public class CoreType {}", []),
+            ("App", "namespace AppNs; public class AppType { public CoreNs.CoreType C { get; } = new(); }", ["Core"]),
+            ("App.Tests", "namespace AppTestsNs; public class AppTestsType { public AppNs.AppType A { get; } = new(); }", ["App"]));
+
+        var engine = new DependencyGraphAnalysisEngine();
+        var report = await engine.AnalyzeAsync(solution, "/tmp/test.sln", excludeTestProjects: true, CancellationToken.None);
+
+        Assert.DoesNotContain(report.Projects, p => p.ProjectName == "App.Tests");
+        Assert.DoesNotContain(report.Edges, e => e.ProjectName == "App.Tests" || e.DependsOnProjectName == "App.Tests");
+        Assert.DoesNotContain(report.UpgradeOrderLeafToRoot, e => e.ProjectName == "App.Tests");
+        Assert.Equal(["Core", "App"], report.UpgradeOrderLeafToRoot.Select(e => e.ProjectName));
+    }
+
     private static Solution CreateGraphSolution(params (string Name, string Source, string[] Dependencies)[] projects)
     {
         var workspace = new AdhocWorkspace();

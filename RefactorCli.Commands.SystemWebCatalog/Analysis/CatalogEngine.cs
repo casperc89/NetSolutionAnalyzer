@@ -22,6 +22,14 @@ public sealed class CatalogEngine
         string solutionPath,
         IReadOnlyList<string> includedRules,
         CancellationToken ct)
+        => await AnalyzeAsync(solution, solutionPath, includedRules, excludeTestProjects: false, ct);
+
+    public async Task<CatalogReport> AnalyzeAsync(
+        Solution solution,
+        string solutionPath,
+        IReadOnlyList<string> includedRules,
+        bool excludeTestProjects,
+        CancellationToken ct)
     {
         var selectedRules = includedRules
             .Where(rule => !string.IsNullOrWhiteSpace(rule))
@@ -60,7 +68,11 @@ public sealed class CatalogEngine
 
         var projectReports = new List<ProjectReport>();
 
-        foreach (var project in solution.Projects.OrderBy(p => p.Name, StringComparer.Ordinal))
+        var projects = solution.Projects
+            .Where(project => !excludeTestProjects || !project.Name.EndsWith(".Tests", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(project => project.Name, StringComparer.Ordinal);
+
+        foreach (var project in projects)
         {
             ct.ThrowIfCancellationRequested();
             _logger.LogInformation("Analyzing project: {ProjectName}", project.Name);

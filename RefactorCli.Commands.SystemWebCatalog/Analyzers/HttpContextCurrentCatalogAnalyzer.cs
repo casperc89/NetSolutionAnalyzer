@@ -61,6 +61,11 @@ public sealed class HttpContextCurrentCatalogAnalyzer : ICatalogAnalyzer
 
                 if (IsHttpContextCurrentProperty(property))
                 {
+                    if (IsParentOfLargerMemberAccess(memberAccess))
+                    {
+                        continue;
+                    }
+
                     AddFinding(acc, document, memberAccess, "System.Web.HttpContext.Current");
                     continue;
                 }
@@ -117,5 +122,11 @@ public sealed class HttpContextCurrentCatalogAnalyzer : ICatalogAnalyzer
         }
 
         return false;
+    }
+
+    private static bool IsParentOfLargerMemberAccess(MemberAccessExpressionSyntax memberAccess)
+    {
+        return memberAccess.Parent is MemberAccessExpressionSyntax parentMemberAccess
+               && ReferenceEquals(parentMemberAccess.Expression, memberAccess);
     }
 }

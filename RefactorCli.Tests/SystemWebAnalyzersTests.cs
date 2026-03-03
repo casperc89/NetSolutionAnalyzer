@@ -106,6 +106,41 @@ public class SystemWebAnalyzersTests
         Assert.Contains(acc.Findings, f => f.Id == "SW0100" && f.Symbol == "System.Web.HttpContext.Current");
         Assert.Contains(acc.Findings, f => f.Id == "SW0100" && f.Symbol == "System.Web.HttpContext.Current.Request");
         Assert.Contains(acc.Findings, f => f.Id == "SW0100" && f.Symbol == "System.Web.HttpContext.Current.Server");
+        Assert.Equal(3, acc.Findings.Count(f => f.Id == "SW0100"));
+    }
+
+    [Fact]
+    public async Task SW0100_DoesNotDuplicate_Current_When_Reporting_CurrentSession()
+    {
+        var project = CreateProject("""
+            namespace System.Web
+            {
+                public class HttpSessionState {}
+                public class HttpContext
+                {
+                    public static HttpContext Current => new();
+                    public HttpSessionState Session => new();
+                }
+            }
+
+            namespace Demo;
+
+            public class C
+            {
+                public void M()
+                {
+                    _ = System.Web.HttpContext.Current.Session;
+                }
+            }
+            """);
+
+        var analyzer = new HttpContextCurrentCatalogAnalyzer();
+        var acc = new CatalogAccumulator();
+        await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
+
+        Assert.DoesNotContain(acc.Findings, f => f.Id == "SW0100" && f.Symbol == "System.Web.HttpContext.Current");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0100" && f.Symbol == "System.Web.HttpContext.Current.Session");
+        Assert.Equal(1, acc.Findings.Count(f => f.Id == "SW0100"));
     }
 
     [Fact]
@@ -777,6 +812,34 @@ public class SystemWebAnalyzersTests
         Assert.Contains("Available rule IDs: SWX001", ex.Message, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task CatalogEngine_ExcludeTestProjects_False_Includes_DotTests_Projects()
+    {
+        var solution = CreateSolution(
+            ("App", "namespace AppNs; public class AppType {}", []),
+            ("App.Tests", "namespace AppTestsNs; public class AppTestsType {}", []));
+
+        var engine = new CatalogEngine([new DeterministicOrderProbeAnalyzer()], NullLogger<CatalogEngine>.Instance);
+        var report = await engine.AnalyzeAsync(solution, "/tmp/test.sln", [], excludeTestProjects: false, CancellationToken.None);
+
+        Assert.Contains(report.Projects, project => project.ProjectName == "App");
+        Assert.Contains(report.Projects, project => project.ProjectName == "App.Tests");
+    }
+
+    [Fact]
+    public async Task CatalogEngine_ExcludeTestProjects_True_Excludes_DotTests_Projects()
+    {
+        var solution = CreateSolution(
+            ("App", "namespace AppNs; public class AppType {}", []),
+            ("App.Tests", "namespace AppTestsNs; public class AppTestsType {}", []));
+
+        var engine = new CatalogEngine([new DeterministicOrderProbeAnalyzer()], NullLogger<CatalogEngine>.Instance);
+        var report = await engine.AnalyzeAsync(solution, "/tmp/test.sln", [], excludeTestProjects: true, CancellationToken.None);
+
+        Assert.Contains(report.Projects, project => project.ProjectName == "App");
+        Assert.DoesNotContain(report.Projects, project => project.ProjectName == "App.Tests");
+    }
+
     private static Project CreateProject(string source)
     {
         var workspace = new AdhocWorkspace();
@@ -793,6 +856,45 @@ public class SystemWebAnalyzersTests
             .AddDocument(DocumentId.CreateNewId(projectId), "test.cs", source);
 
         return solution.GetProject(projectId)!;
+    }
+
+    private static Solution CreateSolution(params (string Name, string Source, string[] Dependencies)[] projects)
+    {
+        var workspace = new AdhocWorkspace();
+        var solution = workspace.CurrentSolution;
+        var projectIds = new Dictionary<string, ProjectId>(StringComparer.Ordinal);
+
+        foreach (var project in projects)
+        {
+            var projectId = ProjectId.CreateNewId(debugName: project.Name);
+            projectIds[project.Name] = projectId;
+
+            solution = solution
+                .AddProject(ProjectInfo.Create(
+                    projectId,
+                    VersionStamp.Create(),
+                    project.Name,
+                    project.Name,
+                    LanguageNames.CSharp,
+                    parseOptions: new CSharpParseOptions(LanguageVersion.CSharp12)))
+                .AddMetadataReference(projectId, MetadataReference.CreateFromFile(typeof(object).Assembly.Location));
+        }
+
+        foreach (var project in projects)
+        {
+            var projectId = projectIds[project.Name];
+            foreach (var dependency in project.Dependencies)
+            {
+                solution = solution.AddProjectReference(projectId, new ProjectReference(projectIds[dependency]));
+            }
+
+            solution = solution.AddDocument(
+                DocumentId.CreateNewId(projectId),
+                $"{project.Name}.cs",
+                project.Source);
+        }
+
+        return solution;
     }
 
     private sealed class DeterministicOrderProbeAnalyzer : ICatalogAnalyzer

@@ -6,9 +6,13 @@ namespace RefactorCli.Commands.DependencyGraph.Analysis;
 
 public sealed class DependencyGraphAnalysisEngine
 {
-    public async Task<DependencyGraphReport> AnalyzeAsync(Solution solution, string solutionPath, CancellationToken ct)
+    public Task<DependencyGraphReport> AnalyzeAsync(Solution solution, string solutionPath, CancellationToken ct)
+        => AnalyzeAsync(solution, solutionPath, excludeTestProjects: false, ct);
+
+    public async Task<DependencyGraphReport> AnalyzeAsync(Solution solution, string solutionPath, bool excludeTestProjects, CancellationToken ct)
     {
         var projects = solution.Projects
+            .Where(p => !excludeTestProjects || !p.Name.EndsWith(".Tests", StringComparison.OrdinalIgnoreCase))
             .OrderBy(ProjectKey, StringComparer.Ordinal)
             .ToList();
 

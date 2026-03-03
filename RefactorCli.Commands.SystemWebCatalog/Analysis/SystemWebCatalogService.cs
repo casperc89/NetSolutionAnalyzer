@@ -33,6 +33,6 @@ public sealed class SystemWebCatalogService
             throw new SolutionLoadException($"No projects were loaded from solution: {solutionPath}");
         }
 
-        return await _engine.AnalyzeAsync(solution, solutionPath, options.IncludedRules, ct);
+        return await _engine.AnalyzeAsync(solution, solutionPath, options.IncludedRules, options.ExcludeTestProjects, ct);
     }
 }

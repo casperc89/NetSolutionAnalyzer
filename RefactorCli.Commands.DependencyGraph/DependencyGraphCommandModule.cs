@@ -27,6 +27,7 @@ public sealed class DependencyGraphCommandModule : ICommandModule
         formatOption.AllowMultipleArgumentsPerToken = true;
 
         var maxClassesOption = new Option<int>("--max-classes-per-project", () => 50, "Maximum class entries listed per project in markdown reports");
+        var excludeTestProjectsOption = new Option<bool>("--exclude-test-projects", "Exclude projects with names ending in '.Tests'");
         var verbosityOption = new Option<string>("--verbosity", () => "normal", "quiet|normal|diag");
 
         var dependency = new Command("dependency", "Dependency analysis");
@@ -35,9 +36,10 @@ public sealed class DependencyGraphCommandModule : ICommandModule
         graph.AddOption(outputOption);
         graph.AddOption(formatOption);
         graph.AddOption(maxClassesOption);
+        graph.AddOption(excludeTestProjectsOption);
         graph.AddOption(verbosityOption);
 
-        graph.SetHandler(async (string? solution, string output, string[] format, int maxClassesPerProject, string verbosity) =>
+        graph.SetHandler(async (string? solution, string output, string[] format, int maxClassesPerProject, bool excludeTestProjects, string verbosity) =>
         {
             if (string.IsNullOrWhiteSpace(solution))
             {
@@ -56,6 +58,7 @@ public sealed class DependencyGraphCommandModule : ICommandModule
                 OutputPath = output,
                 Formats = format,
                 MaxClassesPerProject = maxClassesPerProject,
+                ExcludeTestProjects = excludeTestProjects,
                 Verbosity = verbosity.ToLowerInvariant() switch
                 {
                     "quiet" => VerbosityLevel.Quiet,
@@ -66,7 +69,7 @@ public sealed class DependencyGraphCommandModule : ICommandModule
 
             var exitCode = await handler.ExecuteAsync(options, CancellationToken.None);
             Environment.ExitCode = exitCode;
-        }, solutionOption, outputOption, formatOption, maxClassesOption, verbosityOption);
+        }, solutionOption, outputOption, formatOption, maxClassesOption, excludeTestProjectsOption, verbosityOption);
 
         dependency.AddCommand(graph);
         root.AddCommand(dependency);
