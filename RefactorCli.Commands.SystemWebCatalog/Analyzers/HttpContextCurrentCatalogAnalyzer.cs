@@ -9,6 +9,7 @@ public sealed class HttpContextCurrentCatalogAnalyzer : ICatalogAnalyzer
 {
     private static readonly HashSet<string> TargetAmbientMembers = new(StringComparer.Ordinal)
     {
+        "Application",
         "Items",
         "Request",
         "Response",
@@ -23,7 +24,7 @@ public sealed class HttpContextCurrentCatalogAnalyzer : ICatalogAnalyzer
         Title = "HttpContext.Current ambient context access",
         Category = "Context",
         Severity = "Warning",
-        WhatItDetects = "System.Web.HttpContext.Current and ambient chained usage like Current.Request/Response/Server/User/Items.",
+        WhatItDetects = "System.Web.HttpContext.Current and ambient chained usage like Current.Application/Request/Response/Server/User/Items.",
         WhyItMatters = "Ambient static context often blocks migration and should move to IHttpContextAccessor or explicit request context passing."
     };
 

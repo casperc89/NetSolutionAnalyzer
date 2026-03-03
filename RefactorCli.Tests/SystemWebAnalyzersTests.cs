@@ -76,11 +76,13 @@ public class SystemWebAnalyzersTests
         var project = CreateProject("""
             namespace System.Web
             {
+                public class HttpApplicationState {}
                 public class HttpRequest {}
                 public class HttpServerUtility {}
                 public class HttpContext
                 {
                     public static HttpContext Current => new();
+                    public HttpApplicationState Application => new();
                     public HttpRequest Request => new();
                     public HttpServerUtility Server => new();
                 }
@@ -93,6 +95,7 @@ public class SystemWebAnalyzersTests
                 public void M()
                 {
                     _ = System.Web.HttpContext.Current;
+                    _ = System.Web.HttpContext.Current.Application;
                     _ = System.Web.HttpContext.Current.Request;
                     _ = System.Web.HttpContext.Current.Server;
                 }
@@ -104,9 +107,10 @@ public class SystemWebAnalyzersTests
         await analyzer.AnalyzeAsync(project, acc, CancellationToken.None);
 
         Assert.Contains(acc.Findings, f => f.Id == "SW0100" && f.Symbol == "System.Web.HttpContext.Current");
+        Assert.Contains(acc.Findings, f => f.Id == "SW0100" && f.Symbol == "System.Web.HttpContext.Current.Application");
         Assert.Contains(acc.Findings, f => f.Id == "SW0100" && f.Symbol == "System.Web.HttpContext.Current.Request");
         Assert.Contains(acc.Findings, f => f.Id == "SW0100" && f.Symbol == "System.Web.HttpContext.Current.Server");
-        Assert.Equal(3, acc.Findings.Count(f => f.Id == "SW0100"));
+        Assert.Equal(4, acc.Findings.Count(f => f.Id == "SW0100"));
     }
 
     [Fact]
