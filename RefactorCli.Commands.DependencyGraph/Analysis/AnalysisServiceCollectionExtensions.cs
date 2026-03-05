@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using RefactorCli.Infrastructure;
 
 namespace RefactorCli.Commands.DependencyGraph.Analysis;
 

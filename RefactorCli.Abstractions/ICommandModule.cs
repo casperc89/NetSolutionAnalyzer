@@ -7,5 +7,7 @@ public interface ICommandModule
 {
     string Name { get; }
 
-    void Register(Command root, IServiceCollection services);
+    void RegisterServices(IServiceCollection services);
+
+    void RegisterCommands(Command root, IServiceProvider serviceProvider);
 }

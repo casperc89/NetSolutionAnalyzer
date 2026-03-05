@@ -54,6 +54,7 @@ Current focus: generate a repeatable inventory of `System.Web` usage across a so
 ```bash
 dotnet run --project RefactorCli/RefactorCli.csproj -- --help
 dotnet run --project RefactorCli/RefactorCli.csproj -- systemweb catalog --help
+dotnet run --project RefactorCli/RefactorCli.csproj -- dependency graph --help
 ```
 
 ### Run Catalog
@@ -79,9 +80,8 @@ dotnet run --project RefactorCli/RefactorCli.csproj -- \
 
 ### Options
 - `--solution <path>`: path to solution file (required).
-- `--repo <path>`: reserved for future repo-first flows.
 - `--output <path>`: report output directory.
-- `--format json|md|sarif`: output formats (`json` and `md` currently implemented).
+- `--format json|md`: output formats.
 - `--include-rule <id>` / `--include-rules <id1,id2>`: include only the specified rule IDs.
 - `--max-classes-per-project <n>`: dependency graph markdown truncation limit for class listings.
 - `--exclude-test-projects`: exclude projects with names ending in `.Tests` (supported by `systemweb catalog` and `dependency graph`).
@@ -160,7 +160,7 @@ Rule metadata (what it detects + why it matters) is defined directly in analyzer
 ### Add Another Command Module
 1. Create `RefactorCli.Commands.<Feature>` project.
 2. Implement `ICommandModule` and one or more `ICommandHandler<TOptions>` handlers.
-3. Register via `services.AddModule<YourModule>(rootCommand)` in `RefactorCli/Program.cs`.
+3. Register the module in the `modules` array in `RefactorCli/Program.cs` so its services and commands are wired during startup.
 
 ## Testing
 Run tests:
@@ -169,9 +169,9 @@ dotnet test RefactorCli.Tests/RefactorCli.Tests.csproj
 ```
 
 Current test coverage includes:
-- SW0001 detection.
-- SW0002 semantic symbol detection (including fully-qualified usage without `using`).
-- deterministic finding ordering in `CatalogEngine`.
+- representative System.Web analyzer rule detection (including ambient context, lifecycle handlers, session, cookies, and map-path usage).
+- deterministic dependency graph ordering and transitive upstream class dependency extraction.
+- markdown report generation checks for both command modules (rule breakdowns, hotspots, session/cookie keys, and dependency tree rendering).
 
 ## Sample Project
 `RefactorCli.SampleLegacyWeb` exists to provide deterministic, in-repo input patterns without relying on the real `System.Web` assembly.

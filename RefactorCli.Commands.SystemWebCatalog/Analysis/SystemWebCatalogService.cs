@@ -1,5 +1,6 @@
 using RefactorCli.Abstractions;
 using RefactorCli.Commands.SystemWebCatalog.Contracts;
+using RefactorCli.Infrastructure;
 
 namespace RefactorCli.Commands.SystemWebCatalog.Analysis;
 

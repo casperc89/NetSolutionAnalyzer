@@ -11,13 +11,16 @@ public sealed class DependencyGraphCommandModule : ICommandModule
 {
     public string Name => "dependency";
 
-    public void Register(Command root, IServiceCollection services)
+    public void RegisterServices(IServiceCollection services)
     {
         services.AddTransient<ICommandHandler<DependencyGraphOptions>, DependencyGraphCommandHandler>();
         services.AddSingleton<IReportWriter, JsonReportWriter>();
         services.AddSingleton<IReportWriter, MarkdownReportWriter>();
         services.AddDependencyGraphAnalysis();
+    }
 
+    public void RegisterCommands(Command root, IServiceProvider serviceProvider)
+    {
         var solutionOption = new Option<string>("--solution", "Path to a .sln file");
         var outputOption = new Option<string>("--output", () => "./refactor-reports", "Output directory");
         var formatOption = new Option<string[]>(
@@ -47,9 +50,6 @@ public sealed class DependencyGraphCommandModule : ICommandModule
                 Environment.ExitCode = ExitCodes.InvalidArguments;
                 return;
             }
-
-            var serviceProvider = CommandRuntime.ServiceProvider
-                ?? throw new InvalidOperationException("Service provider not initialized");
 
             var handler = serviceProvider.GetRequiredService<ICommandHandler<DependencyGraphOptions>>();
             var options = new DependencyGraphOptions

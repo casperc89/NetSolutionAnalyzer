@@ -12,18 +12,29 @@ var rootCommand = new RootCommand("Refactor CLI for incremental .NET migrations"
     Name = "refactor"
 };
 
+ICommandModule[] modules =
+[
+    new SystemWebCatalogCommandModule(),
+    new DependencyGraphCommandModule()
+];
+
 using var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
     {
         services.AddLogging(builder => builder.AddConsole());
-
         services.AddInfrastructure();
-        
-        services.AddModule<SystemWebCatalogCommandModule>(rootCommand);
-        services.AddModule<DependencyGraphCommandModule>(rootCommand);
+
+        foreach (var module in modules)
+        {
+            module.RegisterServices(services);
+        }
     })
     .Build();
 
-CommandRuntime.ServiceProvider = host.Services;
+foreach (var module in modules)
+{
+    module.RegisterCommands(rootCommand, host.Services);
+}
+
 var exitCode = await rootCommand.InvokeAsync(args);
 return Environment.ExitCode != 0 ? Environment.ExitCode : exitCode;

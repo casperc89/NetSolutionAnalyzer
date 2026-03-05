@@ -11,14 +11,16 @@ public sealed class SystemWebCatalogCommandModule : ICommandModule
 {
     public string Name => "systemweb";
 
-    public void Register(Command root, IServiceCollection services)
+    public void RegisterServices(IServiceCollection services)
     {
         services.AddTransient<ICommandHandler<SystemWebCatalogOptions>, SystemWebCatalogCommandHandler>();
         services.AddSingleton<IReportWriter, JsonReportWriter>();
         services.AddSingleton<IReportWriter, MarkdownReportWriter>();
-        
         services.AddRoslynAnalysis();
+    }
 
+    public void RegisterCommands(Command root, IServiceProvider serviceProvider)
+    {
         var solutionOption = new Option<string>("--solution", "Path to a .sln file");
         var outputOption = new Option<string>("--output", () => "./refactor-reports", "Output directory");
         var formatOption = new Option<string[]>(
@@ -54,9 +56,6 @@ public sealed class SystemWebCatalogCommandModule : ICommandModule
                 Environment.ExitCode = ExitCodes.InvalidArguments;
                 return;
             }
-
-            var serviceProvider = CommandRuntime.ServiceProvider
-                ?? throw new InvalidOperationException("Service provider not initialized");
 
             var handler = serviceProvider.GetRequiredService<ICommandHandler<SystemWebCatalogOptions>>();
             var normalizedIncludedRules = includeRules

@@ -1,5 +1,6 @@
 using RefactorCli.Abstractions;
 using RefactorCli.Commands.DependencyGraph.Contracts;
+using RefactorCli.Infrastructure;
 
 namespace RefactorCli.Commands.DependencyGraph.Analysis;
 
