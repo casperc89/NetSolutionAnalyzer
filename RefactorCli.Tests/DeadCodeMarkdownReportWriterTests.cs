@@ -14,6 +14,13 @@ public sealed class DeadCodeMarkdownReportWriterTests
             GeneratedAtUtc = DateTime.UtcNow,
             SolutionPath = "/tmp/sample.sln",
             ProjectsAnalyzed = 1,
+            Diagnostics = new DeadCodeDiagnostics
+            {
+                CandidateSymbols = 1,
+                RootSymbols = 0,
+                ProjectsWithDynamicPatterns = 0,
+                Timing = new DeadCodeTiming()
+            },
             Findings =
             [
                 new DeadCodeFinding

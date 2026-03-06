@@ -1,6 +1,6 @@
+using System.Diagnostics;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.FindSymbols;
 using RefactorCli.Commands.DeadCode.Configuration;
 using RefactorCli.Commands.DeadCode.Contracts;
 
@@ -15,19 +15,32 @@ public sealed class DeadCodeAnalysisEngine
         DeadCodeConfig config,
         CancellationToken ct)
     {
+        var totalStopwatch = Stopwatch.StartNew();
+
         var projects = solution.Projects
             .Where(p => !options.ExcludeTestProjects || !IsTestProject(p))
             .OrderBy(p => p.FilePath ?? p.Name, StringComparer.Ordinal)
             .ToList();
 
-        var projectIds = projects.Select(p => p.Id).ToHashSet();
         var projectById = projects.ToDictionary(p => p.Id);
 
+        var phase = Stopwatch.StartNew();
         var candidates = await CollectCandidatesAsync(projects, ct);
-        var roots = CollectRoots(candidates, config);
+        var collectCandidatesMs = phase.ElapsedMilliseconds;
 
-        var incomingReferenceCounts = await BuildIncomingReferenceCountsAsync(candidates, solution, projectIds, ct);
+        phase.Restart();
+        var roots = CollectRoots(candidates, config);
+        var collectRootsMs = phase.ElapsedMilliseconds;
+
+        phase.Restart();
+        var incomingReferenceCounts = await BuildIncomingReferenceCountsAsync(projects, candidates, ct);
+        var buildReferenceIndexMs = phase.ElapsedMilliseconds;
+
+        phase.Restart();
         var dynamicPatterns = await CollectDynamicPatternsByProjectAsync(projects, config.DynamicUsage.ReflectionPatterns, ct);
+        var collectDynamicPatternsMs = phase.ElapsedMilliseconds;
+
+        phase.Restart();
         var suppressionMap = config.Suppressions
             .Where(s => !string.IsNullOrWhiteSpace(s.Symbol))
             .ToDictionary(s => s.Symbol!, s => s.Reason ?? string.Empty, StringComparer.Ordinal);
@@ -72,12 +85,30 @@ public sealed class DeadCodeAnalysisEngine
             });
         }
 
+        var classifyFindingsMs = phase.ElapsedMilliseconds;
+        totalStopwatch.Stop();
+
         return new DeadCodeReport
         {
             GeneratedAtUtc = DateTime.UtcNow,
             SolutionPath = solutionPath,
             ProjectsAnalyzed = projects.Count,
-            Findings = findings
+            Findings = findings,
+            Diagnostics = new DeadCodeDiagnostics
+            {
+                CandidateSymbols = candidates.Count,
+                RootSymbols = roots.Count,
+                ProjectsWithDynamicPatterns = dynamicPatterns.Count,
+                Timing = new DeadCodeTiming
+                {
+                    CollectCandidatesMs = collectCandidatesMs,
+                    CollectRootsMs = collectRootsMs,
+                    BuildReferenceIndexMs = buildReferenceIndexMs,
+                    CollectDynamicPatternsMs = collectDynamicPatternsMs,
+                    ClassifyFindingsMs = classifyFindingsMs,
+                    TotalMs = totalStopwatch.ElapsedMilliseconds
+                }
+            }
         };
     }
 
@@ -166,6 +197,7 @@ public sealed class DeadCodeAnalysisEngine
         var roots = new HashSet<SymbolKey>();
         var explicitSymbols = config.Roots.Symbols.ToHashSet(StringComparer.Ordinal);
         var attributeRoots = config.Roots.Attributes.ToHashSet(StringComparer.Ordinal);
+        var nonActionAttributes = config.Frameworks.AspNetMvc.NonActionAttributes.ToHashSet(StringComparer.Ordinal);
 
         foreach (var candidate in candidates)
         {
@@ -187,7 +219,7 @@ public sealed class DeadCodeAnalysisEngine
                 continue;
             }
 
-            if (candidate.Symbol is IMethodSymbol action && IsAspNetMvcActionRoot(action, config.Frameworks.AspNetMvc))
+            if (candidate.Symbol is IMethodSymbol action && IsAspNetMvcActionRoot(action, config.Frameworks.AspNetMvc, nonActionAttributes))
             {
                 roots.Add(candidate.Key);
             }
@@ -196,7 +228,7 @@ public sealed class DeadCodeAnalysisEngine
         return roots;
     }
 
-    private static bool IsAspNetMvcActionRoot(IMethodSymbol method, AspNetMvcConfig config)
+    private static bool IsAspNetMvcActionRoot(IMethodSymbol method, AspNetMvcConfig config, IReadOnlySet<string> nonActionAttributes)
     {
         if (!config.Enabled)
         {
@@ -223,7 +255,7 @@ public sealed class DeadCodeAnalysisEngine
             return false;
         }
 
-        if (HasAnyAttribute(method, config.NonActionAttributes.ToHashSet(StringComparer.Ordinal)))
+        if (HasAnyAttribute(method, nonActionAttributes))
         {
             return false;
         }
@@ -269,75 +301,94 @@ public sealed class DeadCodeAnalysisEngine
     }
 
     private static async Task<Dictionary<SymbolKey, int>> BuildIncomingReferenceCountsAsync(
+        IReadOnlyList<Project> projects,
         IReadOnlyList<CandidateSymbol> candidates,
-        Solution solution,
-        HashSet<ProjectId> includedProjectIds,
         CancellationToken ct)
     {
-        var result = candidates.ToDictionary(c => c.Key, _ => 0);
+        var counts = candidates.ToDictionary(c => c.Key, _ => 0, SymbolKeyComparer.Instance);
 
-        foreach (var candidate in candidates)
+        foreach (var project in projects)
         {
-            var references = await SymbolFinder.FindReferencesAsync(candidate.Symbol, solution, cancellationToken: ct);
-            var count = 0;
-
-            foreach (var referencedSymbol in references)
+            foreach (var document in project.Documents)
             {
-                foreach (var location in referencedSymbol.Locations)
+                if (document.SourceCodeKind != SourceCodeKind.Regular)
+                {
+                    continue;
+                }
+
+                var root = await document.GetSyntaxRootAsync(ct);
+                if (root is null)
+                {
+                    continue;
+                }
+
+                var semanticModel = await document.GetSemanticModelAsync(ct);
+                if (semanticModel is null)
+                {
+                    continue;
+                }
+
+                foreach (var name in root.DescendantNodes().OfType<SimpleNameSyntax>())
                 {
                     ct.ThrowIfCancellationRequested();
-                    if (location.IsImplicit)
+
+                    var symbolInfo = semanticModel.GetSymbolInfo(name, ct);
+                    var symbol = symbolInfo.Symbol ?? symbolInfo.CandidateSymbols.FirstOrDefault();
+                    if (symbol is null)
                     {
                         continue;
                     }
 
-                    var document = solution.GetDocument(location.Location.SourceTree);
-                    if (document is null || !includedProjectIds.Contains(document.Project.Id))
+                    symbol = NormalizeSymbol(symbol);
+                    if (symbol is null)
                     {
                         continue;
                     }
 
-                    if (IsSelfReference(candidate, location, solution))
+                    var key = CandidateSymbol.CreateKey(symbol);
+                    if (!counts.TryGetValue(key, out _))
                     {
                         continue;
                     }
 
-                    count++;
+                    if (IsDeclarationNameReference(name, symbol, ct))
+                    {
+                        continue;
+                    }
+
+                    counts[key]++;
                 }
             }
-
-            result[candidate.Key] = count;
         }
 
-        return result;
+        return counts;
     }
 
-    private static bool IsSelfReference(CandidateSymbol candidate, ReferenceLocation location, Solution solution)
+    private static ISymbol? NormalizeSymbol(ISymbol symbol)
     {
-        var tree = location.Location.SourceTree;
-        if (tree is null)
+        return symbol switch
         {
-            return false;
-        }
+            IAliasSymbol alias => NormalizeSymbol(alias.Target),
+            IMethodSymbol { MethodKind: MethodKind.Ordinary } method => method,
+            INamedTypeSymbol type => type,
+            _ => null
+        };
+    }
 
-        foreach (var declaration in candidate.Symbol.DeclaringSyntaxReferences)
+    private static bool IsDeclarationNameReference(SimpleNameSyntax name, ISymbol symbol, CancellationToken ct)
+    {
+        foreach (var declaration in symbol.DeclaringSyntaxReferences)
         {
-            if (declaration.SyntaxTree != tree)
-            {
-                continue;
-            }
-
-            var span = declaration.Span;
-            if (span.Contains(location.Location.SourceSpan.Start))
+            var node = declaration.GetSyntax(ct);
+            if (node == name)
             {
                 return true;
             }
-        }
 
-        var document = solution.GetDocument(tree);
-        if (document?.Project.Id != candidate.ProjectId)
-        {
-            return false;
+            if (node is MemberDeclarationSyntax member && member.Span.Contains(name.SpanStart) && member.Span.Contains(name.Span.End))
+            {
+                return true;
+            }
         }
 
         return false;
@@ -347,7 +398,7 @@ public sealed class DeadCodeAnalysisEngine
         IReadOnlyList<Project> projects,
         CancellationToken ct)
     {
-        var candidates = new Dictionary<SymbolKey, CandidateSymbol>();
+        var candidates = new Dictionary<SymbolKey, CandidateSymbol>(SymbolKeyComparer.Instance);
 
         foreach (var project in projects)
         {
@@ -450,6 +501,15 @@ public sealed class DeadCodeAnalysisEngine
 
     private readonly record struct SymbolKey(string Value);
 
+    private sealed class SymbolKeyComparer : IEqualityComparer<SymbolKey>
+    {
+        public static SymbolKeyComparer Instance { get; } = new();
+
+        public bool Equals(SymbolKey x, SymbolKey y) => StringComparer.Ordinal.Equals(x.Value, y.Value);
+
+        public int GetHashCode(SymbolKey obj) => StringComparer.Ordinal.GetHashCode(obj.Value);
+    }
+
     private sealed class CandidateSymbol
     {
         public required SymbolKey Key { get; init; }
@@ -463,7 +523,7 @@ public sealed class DeadCodeAnalysisEngine
         public static CandidateSymbol Create(ISymbol symbol, ProjectId projectId)
         {
             var displayName = symbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat);
-            var key = new SymbolKey($"{symbol.Kind}:{displayName}");
+            var key = CreateKey(symbol);
             return new CandidateSymbol
             {
                 Key = key,
@@ -471,6 +531,12 @@ public sealed class DeadCodeAnalysisEngine
                 DisplayName = displayName,
                 ProjectId = projectId
             };
+        }
+
+        public static SymbolKey CreateKey(ISymbol symbol)
+        {
+            var displayName = symbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat);
+            return new SymbolKey($"{symbol.Kind}:{displayName}");
         }
 
         public SourceLocation? GetSourceLocation()

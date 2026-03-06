@@ -66,6 +66,11 @@ public sealed class DeadCodeCommandHandler : ICommandHandler<DeadCodeOptions>
             _console.Info($"Definitely dead: {report.Findings.Count(f => f.Confidence == DeadCodeConfidence.DefinitelyDead)}");
             _console.Info($"Likely dead: {report.Findings.Count(f => f.Confidence == DeadCodeConfidence.LikelyDead)}");
             _console.Info($"Unknown: {report.Findings.Count(f => f.Confidence == DeadCodeConfidence.Unknown)}");
+            _console.Info($"Candidates: {report.Diagnostics.CandidateSymbols}");
+            _console.Info($"Roots: {report.Diagnostics.RootSymbols}");
+            _console.Info($"Projects with dynamic patterns: {report.Diagnostics.ProjectsWithDynamicPatterns}");
+            _console.Info(
+                $"Timing (ms): total={report.Diagnostics.Timing.TotalMs}, collectCandidates={report.Diagnostics.Timing.CollectCandidatesMs}, collectRoots={report.Diagnostics.Timing.CollectRootsMs}, buildReferenceIndex={report.Diagnostics.Timing.BuildReferenceIndexMs}, collectDynamicPatterns={report.Diagnostics.Timing.CollectDynamicPatternsMs}, classify={report.Diagnostics.Timing.ClassifyFindingsMs}");
 
             foreach (var reportPath in reportPaths)
             {

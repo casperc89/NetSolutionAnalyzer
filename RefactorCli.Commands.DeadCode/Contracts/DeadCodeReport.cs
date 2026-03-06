@@ -9,6 +9,8 @@ public sealed class DeadCodeReport
     public int ProjectsAnalyzed { get; init; }
 
     public required IReadOnlyList<DeadCodeFinding> Findings { get; init; }
+
+    public required DeadCodeDiagnostics Diagnostics { get; init; }
 }
 
 public sealed class DeadCodeFinding
@@ -34,4 +36,30 @@ public sealed class DeadCodeFinding
     public int? Column { get; init; }
 
     public required IReadOnlyList<string> Evidence { get; init; }
+}
+
+public sealed class DeadCodeDiagnostics
+{
+    public required int CandidateSymbols { get; init; }
+
+    public required int RootSymbols { get; init; }
+
+    public required int ProjectsWithDynamicPatterns { get; init; }
+
+    public required DeadCodeTiming Timing { get; init; }
+}
+
+public sealed class DeadCodeTiming
+{
+    public long CollectCandidatesMs { get; init; }
+
+    public long CollectRootsMs { get; init; }
+
+    public long BuildReferenceIndexMs { get; init; }
+
+    public long CollectDynamicPatternsMs { get; init; }
+
+    public long ClassifyFindingsMs { get; init; }
+
+    public long TotalMs { get; init; }
 }
