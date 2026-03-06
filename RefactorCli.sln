@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorCli.Commands.Depend
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorCli.Commands.DeadCode", "RefactorCli.Commands.DeadCode\RefactorCli.Commands.DeadCode.csproj", "{62432587-7591-4D09-AE7B-0DCD20CD0344}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorCli.Commands.MethodDependency", "RefactorCli.Commands.MethodDependency\RefactorCli.Commands.MethodDependency.csproj", "{90F00BCD-DA77-4A45-88B0-A4911DBA9B57}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -66,5 +68,9 @@ Global
 		{62432587-7591-4D09-AE7B-0DCD20CD0344}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62432587-7591-4D09-AE7B-0DCD20CD0344}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{62432587-7591-4D09-AE7B-0DCD20CD0344}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90F00BCD-DA77-4A45-88B0-A4911DBA9B57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90F00BCD-DA77-4A45-88B0-A4911DBA9B57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90F00BCD-DA77-4A45-88B0-A4911DBA9B57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90F00BCD-DA77-4A45-88B0-A4911DBA9B57}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

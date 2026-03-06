@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using RefactorCli.Abstractions;
 using RefactorCli.Commands.DeadCode;
 using RefactorCli.Commands.DependencyGraph;
+using RefactorCli.Commands.MethodDependency;
 using RefactorCli.Commands.SystemWebCatalog;
 using RefactorCli.Infrastructure;
 using System.CommandLine;
@@ -17,6 +18,7 @@ ICommandModule[] modules =
 [
     new SystemWebCatalogCommandModule(),
     new DependencyGraphCommandModule(),
+    new MethodDependencyCommandModule(),
     new DeadCodeCommandModule()
 ];
 

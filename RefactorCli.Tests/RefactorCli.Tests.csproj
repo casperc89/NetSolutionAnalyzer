@@ -27,6 +27,7 @@
     <ProjectReference Include="..\RefactorCli.Commands.SystemWebCatalog\RefactorCli.Commands.SystemWebCatalog.csproj" />
     <ProjectReference Include="..\RefactorCli.Commands.DependencyGraph\RefactorCli.Commands.DependencyGraph.csproj" />
     <ProjectReference Include="..\RefactorCli.Commands.DeadCode\RefactorCli.Commands.DeadCode.csproj" />
+    <ProjectReference Include="..\RefactorCli.Commands.MethodDependency\RefactorCli.Commands.MethodDependency.csproj" />
   </ItemGroup>
 
 </Project>
