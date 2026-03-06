@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RefactorCli.Abstractions;
+using RefactorCli.Commands.DeadCode;
 using RefactorCli.Commands.DependencyGraph;
 using RefactorCli.Commands.SystemWebCatalog;
 using RefactorCli.Infrastructure;
@@ -15,7 +16,8 @@ var rootCommand = new RootCommand("Refactor CLI for incremental .NET migrations"
 ICommandModule[] modules =
 [
     new SystemWebCatalogCommandModule(),
-    new DependencyGraphCommandModule()
+    new DependencyGraphCommandModule(),
+    new DeadCodeCommandModule()
 ];
 
 using var host = Host.CreateDefaultBuilder(args)
